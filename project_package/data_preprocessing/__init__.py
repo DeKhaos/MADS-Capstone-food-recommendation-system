@@ -1,1 +1,1 @@
-from project_package import config  # noqa: F401
+from . import example_features
