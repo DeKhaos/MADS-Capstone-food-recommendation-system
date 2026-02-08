@@ -1,0 +1,38 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "project_package"
+version = "0.0.1"
+description = "MADS Capstone Project: A food recipe recommendation system to help users find a matching recipe, its nutrient, cooking steps, etc."
+authors = [
+  { name = "Kha Nguyen" , email = "minhkha@umich.edu" },
+  { name = "Naiwen Duan" , email = "nduan@umich.edu" },
+  { name = "Susan Oseili" , email = "susanhat@umich.edu" },
+  { name = "Jordan Huang" , email = "jordanhu@umich.edu" }
+]
+license = { file = "LICENSE" }
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License"
+]
+requires-python = ">=3.11.0"
+
+[tool.black]
+line-length = 99
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.venv
+)/
+'''
+
+[tool.isort]
+profile = "black"
+known_first_party = ["project_package"]
+force_sort_within_sections = true
+
+
