@@ -17,7 +17,7 @@ requirements:
 	$(PYTHON_INTERPRETER) -m pip install -U pip
 	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
 	
-## Environment Setup
+## Environment variable setup
 
 .PHONY: env
 env:
@@ -27,6 +27,10 @@ env:
 	else \
 		echo ".env file already exists. Skipping..."; \
 	fi
+
+## Initial combined set up
+setup: requirements env
+	@echo "Environment and dependencies are ready."
 
 
 ## Delete all compiled Python files
