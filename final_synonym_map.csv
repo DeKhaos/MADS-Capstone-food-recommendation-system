@@ -1,0 +1,567 @@
+,variant,canonical
+0,hard egg,egg
+1,jumbo egg,egg
+2,clove,garlic clove
+3,whole clove,garlic clove
+4,powdered clove,garlic clove
+5,bulb of garlic,garlic
+6,instant garlic,garlic
+7,head of garlic,garlic
+8,tomatoes with basil oregano and garlic,garlic
+9,tomatoes with garlic,garlic
+10,tomatoes with onion and garlic,garlic
+11,bottled garlic,garlic
+12,heads of garlic,garlic
+13,bulbs of garlic,garlic
+14,flat leaf parsley,parsley
+15,italian parsley,parsley
+16,flat leaf italian parsley,parsley
+17,curly leaf parsley,parsley
+18,real vanilla,vanilla
+19,bicarbonate of soda,baking soda
+20,frozen carrot,carrot
+21,real vanilla extract,vanilla extract
+22,vegan margarine,margarine
+23,unsalted margarine,margarine
+24,reduced calorie margarine,margarine
+25,reduced fat margarine,margarine
+26,soy margarine,margarine
+27,low fat margarine,margarine
+28,regular margarine,margarine
+29,crystallized ginger,ginger
+30,powdered ginger,ginger
+31,candied ginger,ginger
+32,pickled ginger,ginger
+33,glace ginger,ginger
+34,mexican oregano,oregano
+35,dry oregano,oregano
+36,greek oregano,oregano
+37,tomatoes seasoned with basil garlic oregano,oregano
+38,powdered cumin,cumin
+39,liquid honey,honey
+40,clear honey,honey
+41,orange blossom honey,honey
+42,thai basil,basil
+43,sweet basil,basil
+44,dry basil,basil
+45,tomatoes with basil,basil
+46,leaf basil,basil
+47,whole nutmeg,nutmeg
+48,low fat mayonnaise,mayonnaise
+49,fat free mayonnaise,mayonnaise
+50,hellmann s mayonnaise,mayonnaise
+51,vegan mayonnaise,mayonnaise
+52,best foods mayonnaise,mayonnaise
+53,prepared mayonnaise,mayonnaise
+54,leaf thyme,thyme
+55,whole thyme,thyme
+56,sweet paprika,paprika
+57,hungarian paprika,paprika
+58,hot paprika,paprika
+59,sweet hungarian paprika,paprika
+60,mild paprika,paprika
+61,red paprika,paprika
+62,smoked bacon,bacon
+63,canadian bacon,bacon
+64,streaky bacon,bacon
+65,slab bacon,bacon
+66,crisp bacon,bacon
+67,back bacon,bacon
+68,smoked streaky bacon,bacon
+69,vegetarian bacon,bacon
+70,button mushroom,mushroom
+71,portabella mushroom,mushroom
+72,shiitake mushroom,mushroom
+73,cremini mushroom,mushroom
+74,white mushroom,mushroom
+75,porcini mushroom,mushroom
+76,white button mushroom,mushroom
+77,whole mushroom,mushroom
+78,brown button mushroom,mushroom
+79,whole pecan,pecan
+80,candied pecan,pecan
+81,black walnut,walnut
+82,english walnut,walnut
+83,candied walnut,walnut
+84,golden raisin,raisin
+85,seedless raisin,raisin
+86,white raisin,raisin
+87,sultana raisin,raisin
+88,green zucchini,zucchini
+89,yellow zucchini,zucchini
+90,preserved lemon,lemon
+91,jumbo shrimp,shrimp
+92,frozen shrimp,shrimp
+93,tiger shrimp,shrimp
+94,bay shrimp,shrimp
+95,low fat buttermilk,buttermilk
+96,fat free buttermilk,buttermilk
+97,dry buttermilk,buttermilk
+98,fat buttermilk,buttermilk
+99,tomato ketchup,ketchup
+100,heinz ketchup,ketchup
+101,no salt added ketchup,ketchup
+102,frozen strawberry,strawberry
+103,frozen unsweetened strawberry,strawberry
+104,frozen sweetened strawberry,strawberry
+105,frozen whole strawberry,strawberry
+106,cream cheese with chive,chive
+107,whole chicken,chicken
+108,roasting chicken,chicken
+109,broiler fryer chicken,chicken
+110,frying chicken,chicken
+111,fryer chicken,chicken
+112,stewing chicken,chicken
+113,white meat chicken,chicken
+114,broiler chicken,chicken
+115,vegetable shortening,shortening
+116,crisco shortening,shortening
+117,butter flavor shortening,shortening
+118,solid shortening,shortening
+119,english cucumber,cucumber
+120,seedless cucumber,cucumber
+121,lebanese cucumber,cucumber
+122,pickling cucumber,cucumber
+123,kirby cucumber,cucumber
+124,english seedless cucumber,cucumber
+125,seedless european cucumber,cucumber
+126,hass avocado,avocado
+127,whole allspice,allspice
+128,chunk pineapple,pineapple
+129,chunky salsa,salsa
+130,mild salsa,salsa
+131,green chili salsa,salsa
+132,hot salsa,salsa
+133,tomatillo salsa,salsa
+134,chipotle salsa,salsa
+135,mango salsa,salsa
+136,frozen spinach,spinach
+137,frozen creamed spinach,spinach
+138,deli ham,ham
+139,smoked ham,ham
+140,country ham,ham
+141,prosciutto ham,ham
+142,serrano ham,ham
+143,parma ham,ham
+144,sweetened cranberry,cranberry
+145,frozen cranberry,cranberry
+146,green coriander,coriander
+147,unsulphured molasse,molasse
+148,pomegranate molasse,molasse
+149,blackstrap molasse,molasse
+150,rubbed sage,sage
+151,key lime,lime
+152,frozen blueberry,blueberry
+153,unsweetened frozen blueberry,blueberry
+154,kalamata olive,black olive
+155,pitted black olive,black olive
+156,pitted olive,black olive
+157,stuffed green olive,black olive
+158,spanish olive,black olive
+159,nicoise olive,black olive
+160,oil cured black olive,black olive
+161,white rum,rum
+162,spiced rum,rum
+163,malibu rum,rum
+164,golden rum,rum
+165,bacardi rum,rum
+166,jamaican rum,rum
+167,mandarin orange,orange
+168,navel orange,orange
+169,blood orange,orange
+170,seedless orange,orange
+171,canned mandarin orange,orange
+172,green cabbage,cabbage
+173,red cabbage,cabbage
+174,napa cabbage,cabbage
+175,head of cabbage,cabbage
+176,savoy cabbage,cabbage
+177,chinese cabbage,cabbage
+178,white cabbage,cabbage
+179,purple cabbage,cabbage
+180,frozen broccoli,broccoli
+181,head broccoli,broccoli
+182,head of broccoli,broccoli
+183,flaked coconut,coconut
+184,sweetened flaked coconut,coconut
+185,unsweetened coconut,coconut
+186,sweetened coconut,coconut
+187,cream of coconut,coconut
+188,unsweetened flaked coconut,coconut
+189,angel flake coconut,coconut
+190,salt pork,pork
+191,barbecued pork,pork
+192,chicken legs thigh,chicken thigh
+193,yellow cornmeal,cornmeal
+194,white cornmeal,cornmeal
+195,oat,rolled oat
+196,quick cooking oat,rolled oat
+197,old fashioned oat,rolled oat
+198,quick oat,rolled oat
+199,steel cut oat,rolled oat
+200,quaker oat,rolled oat
+201,porridge oat,rolled oat
+202,dry tarragon,tarragon
+203,lager beer,beer
+204,stout beer,beer
+205,ginger beer,beer
+206,frozen raspberry,raspberry
+207,frozen unsweetened raspberry,raspberry
+208,red raspberry,raspberry
+209,frozen sweetened raspberry,raspberry
+210,fat free cool whip,cool whip
+211,japanese eggplant,eggplant
+212,bittersweet chocolate,chocolate
+213,white chocolate,chocolate
+214,baking chocolate,chocolate
+215,cooking chocolate,chocolate
+216,green mango,mango
+217,green asparagu,asparagu
+218,frozen asparagu,asparagu
+219,white asparagu,asparagu
+220,cooking sherry,dry sherry
+221,cream sherry,dry sherry
+222,sweet sherry,dry sherry
+223,preserved gingerroot,gingerroot
+224,mint,of mint
+225,apricot brandy,brandy
+226,cherry brandy,brandy
+227,apple brandy,brandy
+228,peach brandy,brandy
+229,salted peanut,peanut
+230,unsalted peanut,peanut
+231,unsalted dry peanut,peanut
+232,spanish peanut,peanut
+233,unsweetened applesauce,applesauce
+234,chunky applesauce,applesauce
+235,silken tofu,tofu
+236,low fat tofu,tofu
+237,vanilla vodka,vodka
+238,citrus infused vodka,vodka
+239,raspberry vodka,vodka
+240,absolut citron vodka,vodka
+241,orange infused vodka,vodka
+242,lemon flavored vodka,vodka
+243,absolut vodka,vodka
+244,cherry vodka,vodka
+245,absolut mandarin vodka,vodka
+246,egg beaters egg substitute,splenda sugar substitute
+247,equal sugar substitute,splenda sugar substitute
+248,fat free egg substitute,splenda sugar substitute
+249,ener g egg substitute,splenda sugar substitute
+250,non dairy milk substitute,splenda sugar substitute
+251,green cardamom,cardamom
+252,canned pumpkin,pumpkin
+253,solid pack pumpkin,pumpkin
+254,canned solid pack pumpkin,pumpkin
+255,libby s canned pumpkin,pumpkin
+256,dry dill weed,dill weed
+257,head cauliflower,cauliflower
+258,frozen cauliflower,cauliflower
+259,chocolate graham cracker crumb,graham cracker crumb
+260,pitted date,date
+261,chestnut,water chestnut
+262,macaroni,elbow macaroni
+263,corkscrew macaroni,elbow macaroni
+264,shell macaroni,elbow macaroni
+265,quick cooking oatmeal,oatmeal
+266,old fashioned oatmeal,oatmeal
+267,quick oatmeal,oatmeal
+268,bosc pear,pear
+269,bartlett pear,pear
+270,anjou pear,pear
+271,asian pear,pear
+272,canned pear,pear
+273,candied lemon peel,lemon peel
+274,candied citron peel,lemon peel
+275,bing cherry,maraschino cherry
+276,sour cherry,maraschino cherry
+277,frozen cherry,maraschino cherry
+278,red maraschino cherry,maraschino cherry
+279,green maraschino cherry,maraschino cherry
+280,red cherry,maraschino cherry
+281,unsalted cashew,cashew
+282,salted cashew,cashew
+283,vanilla flavored soymilk,soymilk
+284,unsweetened soymilk,soymilk
+285,vanilla soymilk,soymilk
+286,chocolate soymilk,soymilk
+287,low fat soymilk,soymilk
+288,non fat soymilk,soymilk
+289,mixed spice,pumpkin pie spice
+290,apple pie spice,pumpkin pie spice
+291,chat masala,garam masala
+292,masala,garam masala
+293,peppercorn,black peppercorn
+294,whole black peppercorn,black peppercorn
+295,green peppercorn,black peppercorn
+296,szechuan peppercorn,black peppercorn
+297,leg of lamb,lamb
+298,racks of lamb,lamb
+299,rack of lamb,lamb
+300,lemon pepper seasoning,poultry seasoning
+301,accent seasoning,poultry seasoning
+302,adobo seasoning,poultry seasoning
+303,unsweetened pineapple chunk,pineapple chunk
+304,stew beef chunk,pineapple chunk
+305,cider,apple cider
+306,sparkling apple cider,apple cider
+307,hard alcoholic cider,apple cider
+308,hard apple cider,apple cider
+309,dry cider,apple cider
+310,mixed herb,herb
+311,frozen corn kernel,corn kernel
+312,canned corn kernel,corn kernel
+313,mini marshmallow,miniature marshmallow
+314,colored miniature marshmallow,miniature marshmallow
+315,dry linguine,linguine
+316,canned tuna,tuna
+317,albacore tuna,tuna
+318,solid white tuna,tuna
+319,chunk tuna,tuna
+320,ahi tuna,tuna
+321,hickory liquid smoke,liquid smoke
+322,black currant,currant
+323,red currant,currant
+324,lime wedge,lemon wedge
+325,frozen rhubarb,rhubarb
+326,israeli couscou,couscou
+327,red lentil,lentil
+328,brown lentil,lentil
+329,green lentil,lentil
+330,dry lentil,lentil
+331,split red lentil,lentil
+332,dry green lentil,lentil
+333,yellow lentil,lentil
+334,french lentil,lentil
+335,black lentil,lentil
+336,marmalade,orange marmalade
+337,low fat creme fraiche,creme fraiche
+338,chocolate graham cracker,graham cracker
+339,honey graham cracker,graham cracker
+340,cinnamon graham cracker,graham cracker
+341,low fat graham cracker,graham cracker
+342,red beet,beet
+343,silver beet,beet
+344,smoked salmon,salmon
+345,pink salmon,salmon
+346,red salmon,salmon
+347,canned salmon,salmon
+348,instant coffee,coffee
+349,brewed coffee,coffee
+350,strong black coffee,coffee
+351,espresso coffee,coffee
+352,black coffee,coffee
+353,very strong coffee,coffee
+354,powdered instant coffee,coffee
+355,frozen blackberry,blackberry
+356,littleneck clam,clam
+357,canned clam,clam
+358,unsalted shelled pistachio,pistachio
+359,pudding,instant vanilla pudding
+360,french vanilla instant pudding,instant vanilla pudding
+361,instant lemon pudding,instant vanilla pudding
+362,chocolate instant pudding,instant vanilla pudding
+363,chocolate pudding,instant vanilla pudding
+364,prepared vanilla pudding,instant vanilla pudding
+365,butterscotch pudding,instant vanilla pudding
+366,banana cream instant pudding,instant vanilla pudding
+367,pumpkin pie filling,cherry pie filling
+368,instant vanilla flavor pudding and pie filling,cherry pie filling
+369,lemon flavor instant pudding and pie filling,cherry pie filling
+370,raspberry pie filling,cherry pie filling
+371,frozen puff pastry,puff pastry
+372,phyllo pastry,puff pastry
+373,premade puff pastry,puff pastry
+374,french baguette,baguette
+375,sourdough baguette,baguette
+376,powdered saffron,saffron
+377,pickle,dill pickle
+378,sweet pickle,dill pickle
+379,kosher dill pickle,dill pickle
+380,bread and butter pickle,dill pickle
+381,sour dill pickle,dill pickle
+382,imitation bacon bit,bacon bit
+383,dill pickle spear,asparagus spear
+384,serrano chili,green chili
+385,anaheim chili,green chili
+386,ancho chili,green chili
+387,mild green chili,green chili
+388,calimyrna fig,fig
+389,spinach fettuccine,fettuccine
+390,dry fettuccine,fettuccine
+391,liquid sweetener,artificial sweetener
+392,dry sweetener,artificial sweetener
+393,allspice berry,berry
+394,mixed berry,berry
+395,frozen mixed berry,berry
+396,green capsicum,red capsicum
+397,seasoned crouton,crouton
+398,garlic flavored crouton,crouton
+399,herbed crouton,crouton
+400,dill pickle slice,lemon slice
+401,strawberry slice,lemon slice
+402,crabmeat,lump crabmeat
+403,frozen crabmeat,lump crabmeat
+404,chipotle chile in adobo,chipotle chiles in adobo
+405,turkey kielbasa,kielbasa
+406,smoked kielbasa,kielbasa
+407,polska kielbasa,kielbasa
+408,polish kielbasa,kielbasa
+409,center cut pork chop,pork chop
+410,pork loin chop,pork chop
+411,low sodium tamari,tamari
+412,barley,pearl barley
+413,quick cooking barley,pearl barley
+414,pot barley,pearl barley
+415,bouillon,chicken bouillon
+416,instant chicken bouillon,chicken bouillon
+417,chicken flavor instant bouillon,chicken bouillon
+418,daikon radishe,radishe
+419,red radishe,radishe
+420,scallop,sea scallop
+421,bay scallop,sea scallop
+422,guar gum,xanthan gum
+423,anise,star anise
+424,graham cracker crust,graham cracker pie crust
+425,prepared graham cracker crust,graham cracker pie crust
+426,reduced fat graham cracker crust,graham cracker pie crust
+427,inch graham cracker crust,graham cracker pie crust
+428,graham cracker crumb crust,graham cracker pie crust
+429,seedless watermelon,watermelon
+430,green cardamom pod,cardamom pod
+431,black cardamom pod,cardamom pod
+432,whole cardamom pod,cardamom pod
+433,whole wheat english muffin,english muffin
+434,corned beef brisket,beef brisket
+435,red chile,jalapeno chile
+436,poblano chile,jalapeno chile
+437,chipotle chile,jalapeno chile
+438,chile,jalapeno chile
+439,ancho chile,jalapeno chile
+440,green chile,jalapeno chile
+441,canned chipotle chile,jalapeno chile
+442,arbol chile,jalapeno chile
+443,pureed chipotle chile,jalapeno chile
+444,frozen okra,okra
+445,frozen cut okra,okra
+446,canola oil cooking spray,olive oil flavored cooking spray
+447,red plum,plum
+448,purple plum,plum
+449,spanish olives with pimento,pimento
+450,matzo meal,flax seed meal
+451,hazelnut meal,flax seed meal
+452,amaretto liqueur,cointreau liqueur
+453,amarula cream liqueur,cointreau liqueur
+454,hazelnut flavored liqueur,cointreau liqueur
+455,almond flavored liqueur,cointreau liqueur
+456,tapioca starch,potato starch
+457,daikon radish,radish
+458,red radish,radish
+459,squash,acorn squash
+460,spaghetti squash,acorn squash
+461,chutney,mango chutney
+462,fruit chutney,mango chutney
+463,major grey chutney,mango chutney
+464,jumbo pasta shell,pasta shell
+465,puff pastry shell,pasta shell
+466,frozen puff pastry shell,pasta shell
+467,grape,red seedless grape
+468,seedless grape,red seedless grape
+469,green seedless grape,red seedless grape
+470,green grape,red seedless grape
+471,red grape,red seedless grape
+472,white grape,red seedless grape
+473,black grape,red seedless grape
+474,hash brown,frozen hash brown
+475,vermouth,dry vermouth
+476,sweet vermouth,dry vermouth
+477,dry white vermouth,dry vermouth
+478,summer savory,savory
+479,sun tomato pesto,basil pesto
+480,marinated artichoke,artichoke
+481,white creme de cacao,creme de cacao
+482,liquid stevia,stevia
+483,beef dripping,bacon dripping
+484,white miso,miso
+485,red miso,miso
+486,yellow miso,miso
+487,non dairy whipped topping,cool whip topping
+488,frozen non dairy topping,cool whip topping
+489,liver,chicken liver
+490,calf liver,chicken liver
+491,broccoli stem,cilantro stem
+492,parsley stem,cilantro stem
+493,mushroom stem,cilantro stem
+494,mixed lettuces and spring green,green
+495,lettuce green,green
+496,lemon juice concentrate,frozen limeade concentrate
+497,frozen cranberry juice concentrate,frozen limeade concentrate
+498,powdered soy protein concentrate,frozen limeade concentrate
+499,pink grapefruit,grapefruit
+500,red grapefruit,grapefruit
+501,curacao,blue curacao
+502,orange curacao,blue curacao
+503,chicken fat,bacon fat
+504,duck fat,bacon fat
+505,gluten,vital wheat gluten
+506,wheat gluten,vital wheat gluten
+507,fine semolina,semolina
+508,melon,honeydew melon
+509,bitter melon,honeydew melon
+510,currant jelly,red currant jelly
+511,green onions with top,green onion top
+512,scallion top,green onion top
+513,celery top,green onion top
+514,tapioca,quick cooking tapioca
+515,minute tapioca,quick cooking tapioca
+516,dry tapioca,quick cooking tapioca
+517,pearl tapioca,quick cooking tapioca
+518,macaroni noodle,spaghetti noodle
+519,udon noodle,spaghetti noodle
+520,tagliatelle pasta noodle,spaghetti noodle
+521,cellophane noodle,spaghetti noodle
+522,bean thread noodle,spaghetti noodle
+523,dry lasagna noodle,spaghetti noodle
+524,pasta noodle,spaghetti noodle
+525,black tea,tea
+526,instant tea,tea
+527,phyllo pastry sheet,puff pastry sheet
+528,rice paper sheet,puff pastry sheet
+529,live lobster,lobster
+530,green plantain,plantain
+531,white hominy,hominy
+532,yellow hominy,hominy
+533,mushroom cap,portabella mushroom cap
+534,smoked ham hock,ham hock
+535,white chocolate curl,chocolate curl
+536,pepperidge farm herb stuffing,prepared stuffing
+537,liquid smoke flavoring,vanilla flavoring
+538,ham shank,lamb shank
+539,quick cooking grit,grit
+540,yucca root,celery root
+541,dry marsala,marsala
+542,bulgur wheat,bulgar wheat
+543,endive,belgian endive
+544,green creme de menthe,creme de menthe
+545,white creme de menthe,creme de menthe
+546,graham cracker square,white chocolate baking square
+547,baker s unsweetened chocolate square,white chocolate baking square
+548,channa dal,urad dal
+549,beef suet,suet
+550,pork sausage link,sweet italian sausage link
+551,hot italian sausage link,sweet italian sausage link
+552,cheese spread,cream cheese spread
+553,i can t believe it s not butter spread,cream cheese spread
+554,lumpia skin,wonton skin
+555,smoked trout,trout
+556,beef round,beef eye round
+557,white chocolate baking bar,chocolate bar
+558,low fat ricotta,ricotta
+559,french fry,frozen french fry
+560,buffalo mozzarella,low fat mozzarella
+561,whole milk mozzarella,low fat mozzarella
+562,yeast cake,compressed yeast cake
+563,black treacle,treacle
+564,red caviar,black caviar
+565,agar,agar agar

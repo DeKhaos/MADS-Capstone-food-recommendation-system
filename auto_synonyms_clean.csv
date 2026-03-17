@@ -1,0 +1,567 @@
+variant,canonical,bad_mapping
+hard egg,egg,False
+jumbo egg,egg,False
+clove,garlic clove,False
+whole clove,garlic clove,False
+powdered clove,garlic clove,False
+bulb of garlic,garlic,False
+instant garlic,garlic,False
+head of garlic,garlic,False
+tomatoes with basil oregano and garlic,garlic,False
+tomatoes with garlic,garlic,False
+tomatoes with onion and garlic,garlic,False
+bottled garlic,garlic,False
+heads of garlic,garlic,False
+bulbs of garlic,garlic,False
+flat leaf parsley,parsley,False
+italian parsley,parsley,False
+flat leaf italian parsley,parsley,False
+curly leaf parsley,parsley,False
+real vanilla,vanilla,False
+bicarbonate of soda,baking soda,False
+frozen carrot,carrot,False
+real vanilla extract,vanilla extract,False
+vegan margarine,margarine,False
+unsalted margarine,margarine,False
+reduced calorie margarine,margarine,False
+reduced fat margarine,margarine,False
+soy margarine,margarine,False
+low fat margarine,margarine,False
+regular margarine,margarine,False
+crystallized ginger,ginger,False
+powdered ginger,ginger,False
+candied ginger,ginger,False
+pickled ginger,ginger,False
+glace ginger,ginger,False
+mexican oregano,oregano,False
+dry oregano,oregano,False
+greek oregano,oregano,False
+tomatoes seasoned with basil garlic oregano,oregano,False
+powdered cumin,cumin,False
+liquid honey,honey,False
+clear honey,honey,False
+orange blossom honey,honey,False
+thai basil,basil,False
+sweet basil,basil,False
+dry basil,basil,False
+tomatoes with basil,basil,False
+leaf basil,basil,False
+whole nutmeg,nutmeg,False
+low fat mayonnaise,mayonnaise,False
+fat free mayonnaise,mayonnaise,False
+hellmann s mayonnaise,mayonnaise,False
+vegan mayonnaise,mayonnaise,False
+best foods mayonnaise,mayonnaise,False
+prepared mayonnaise,mayonnaise,False
+leaf thyme,thyme,False
+whole thyme,thyme,False
+sweet paprika,paprika,False
+hungarian paprika,paprika,False
+hot paprika,paprika,False
+sweet hungarian paprika,paprika,False
+mild paprika,paprika,False
+red paprika,paprika,False
+smoked bacon,bacon,False
+canadian bacon,bacon,False
+streaky bacon,bacon,False
+slab bacon,bacon,False
+crisp bacon,bacon,False
+back bacon,bacon,False
+smoked streaky bacon,bacon,False
+vegetarian bacon,bacon,False
+button mushroom,mushroom,False
+portabella mushroom,mushroom,False
+shiitake mushroom,mushroom,False
+cremini mushroom,mushroom,False
+white mushroom,mushroom,False
+porcini mushroom,mushroom,False
+white button mushroom,mushroom,False
+whole mushroom,mushroom,False
+brown button mushroom,mushroom,False
+whole pecan,pecan,False
+candied pecan,pecan,False
+black walnut,walnut,False
+english walnut,walnut,False
+candied walnut,walnut,False
+golden raisin,raisin,False
+seedless raisin,raisin,False
+white raisin,raisin,False
+sultana raisin,raisin,False
+green zucchini,zucchini,False
+yellow zucchini,zucchini,False
+preserved lemon,lemon,False
+jumbo shrimp,shrimp,False
+frozen shrimp,shrimp,False
+tiger shrimp,shrimp,False
+bay shrimp,shrimp,False
+low fat buttermilk,buttermilk,False
+fat free buttermilk,buttermilk,False
+dry buttermilk,buttermilk,False
+fat buttermilk,buttermilk,False
+tomato ketchup,ketchup,False
+heinz ketchup,ketchup,False
+no salt added ketchup,ketchup,False
+frozen strawberry,strawberry,False
+frozen unsweetened strawberry,strawberry,False
+frozen sweetened strawberry,strawberry,False
+frozen whole strawberry,strawberry,False
+cream cheese with chive,chive,False
+whole chicken,chicken,False
+roasting chicken,chicken,False
+broiler fryer chicken,chicken,False
+frying chicken,chicken,False
+fryer chicken,chicken,False
+stewing chicken,chicken,False
+white meat chicken,chicken,False
+broiler chicken,chicken,False
+vegetable shortening,shortening,False
+crisco shortening,shortening,False
+butter flavor shortening,shortening,False
+solid shortening,shortening,False
+english cucumber,cucumber,False
+seedless cucumber,cucumber,False
+lebanese cucumber,cucumber,False
+pickling cucumber,cucumber,False
+kirby cucumber,cucumber,False
+english seedless cucumber,cucumber,False
+seedless european cucumber,cucumber,False
+hass avocado,avocado,False
+whole allspice,allspice,False
+chunk pineapple,pineapple,False
+chunky salsa,salsa,False
+mild salsa,salsa,False
+green chili salsa,salsa,False
+hot salsa,salsa,False
+tomatillo salsa,salsa,False
+chipotle salsa,salsa,False
+mango salsa,salsa,False
+frozen spinach,spinach,False
+frozen creamed spinach,spinach,False
+deli ham,ham,False
+smoked ham,ham,False
+country ham,ham,False
+prosciutto ham,ham,False
+serrano ham,ham,False
+parma ham,ham,False
+sweetened cranberry,cranberry,False
+frozen cranberry,cranberry,False
+green coriander,coriander,False
+unsulphured molasse,molasse,False
+pomegranate molasse,molasse,False
+blackstrap molasse,molasse,False
+rubbed sage,sage,False
+key lime,lime,False
+frozen blueberry,blueberry,False
+unsweetened frozen blueberry,blueberry,False
+kalamata olive,black olive,False
+pitted black olive,black olive,False
+pitted olive,black olive,False
+stuffed green olive,black olive,False
+spanish olive,black olive,False
+nicoise olive,black olive,False
+oil cured black olive,black olive,False
+white rum,rum,False
+spiced rum,rum,False
+malibu rum,rum,False
+golden rum,rum,False
+bacardi rum,rum,False
+jamaican rum,rum,False
+mandarin orange,orange,False
+navel orange,orange,False
+blood orange,orange,False
+seedless orange,orange,False
+canned mandarin orange,orange,False
+green cabbage,cabbage,False
+red cabbage,cabbage,False
+napa cabbage,cabbage,False
+head of cabbage,cabbage,False
+savoy cabbage,cabbage,False
+chinese cabbage,cabbage,False
+white cabbage,cabbage,False
+purple cabbage,cabbage,False
+frozen broccoli,broccoli,False
+head broccoli,broccoli,False
+head of broccoli,broccoli,False
+flaked coconut,coconut,False
+sweetened flaked coconut,coconut,False
+unsweetened coconut,coconut,False
+sweetened coconut,coconut,False
+cream of coconut,coconut,False
+unsweetened flaked coconut,coconut,False
+angel flake coconut,coconut,False
+salt pork,pork,False
+barbecued pork,pork,False
+chicken legs thigh,chicken thigh,False
+yellow cornmeal,cornmeal,False
+white cornmeal,cornmeal,False
+oat,rolled oat,False
+quick cooking oat,rolled oat,False
+old fashioned oat,rolled oat,False
+quick oat,rolled oat,False
+steel cut oat,rolled oat,False
+quaker oat,rolled oat,False
+porridge oat,rolled oat,False
+dry tarragon,tarragon,False
+lager beer,beer,False
+stout beer,beer,False
+ginger beer,beer,False
+frozen raspberry,raspberry,False
+frozen unsweetened raspberry,raspberry,False
+red raspberry,raspberry,False
+frozen sweetened raspberry,raspberry,False
+fat free cool whip,cool whip,False
+japanese eggplant,eggplant,False
+bittersweet chocolate,chocolate,False
+white chocolate,chocolate,False
+baking chocolate,chocolate,False
+cooking chocolate,chocolate,False
+green mango,mango,False
+green asparagu,asparagu,False
+frozen asparagu,asparagu,False
+white asparagu,asparagu,False
+cooking sherry,dry sherry,False
+cream sherry,dry sherry,False
+sweet sherry,dry sherry,False
+preserved gingerroot,gingerroot,False
+mint,of mint,False
+apricot brandy,brandy,False
+cherry brandy,brandy,False
+apple brandy,brandy,False
+peach brandy,brandy,False
+salted peanut,peanut,False
+unsalted peanut,peanut,False
+unsalted dry peanut,peanut,False
+spanish peanut,peanut,False
+unsweetened applesauce,applesauce,False
+chunky applesauce,applesauce,False
+silken tofu,tofu,False
+low fat tofu,tofu,False
+vanilla vodka,vodka,False
+citrus infused vodka,vodka,False
+raspberry vodka,vodka,False
+absolut citron vodka,vodka,False
+orange infused vodka,vodka,False
+lemon flavored vodka,vodka,False
+absolut vodka,vodka,False
+cherry vodka,vodka,False
+absolut mandarin vodka,vodka,False
+egg beaters egg substitute,splenda sugar substitute,False
+equal sugar substitute,splenda sugar substitute,False
+fat free egg substitute,splenda sugar substitute,False
+ener g egg substitute,splenda sugar substitute,False
+non dairy milk substitute,splenda sugar substitute,False
+green cardamom,cardamom,False
+canned pumpkin,pumpkin,False
+solid pack pumpkin,pumpkin,False
+canned solid pack pumpkin,pumpkin,False
+libby s canned pumpkin,pumpkin,False
+dry dill weed,dill weed,False
+head cauliflower,cauliflower,False
+frozen cauliflower,cauliflower,False
+chocolate graham cracker crumb,graham cracker crumb,False
+pitted date,date,False
+chestnut,water chestnut,False
+macaroni,elbow macaroni,False
+corkscrew macaroni,elbow macaroni,False
+shell macaroni,elbow macaroni,False
+quick cooking oatmeal,oatmeal,False
+old fashioned oatmeal,oatmeal,False
+quick oatmeal,oatmeal,False
+bosc pear,pear,False
+bartlett pear,pear,False
+anjou pear,pear,False
+asian pear,pear,False
+canned pear,pear,False
+candied lemon peel,lemon peel,False
+candied citron peel,lemon peel,False
+bing cherry,maraschino cherry,False
+sour cherry,maraschino cherry,False
+frozen cherry,maraschino cherry,False
+red maraschino cherry,maraschino cherry,False
+green maraschino cherry,maraschino cherry,False
+red cherry,maraschino cherry,False
+unsalted cashew,cashew,False
+salted cashew,cashew,False
+vanilla flavored soymilk,soymilk,False
+unsweetened soymilk,soymilk,False
+vanilla soymilk,soymilk,False
+chocolate soymilk,soymilk,False
+low fat soymilk,soymilk,False
+non fat soymilk,soymilk,False
+mixed spice,pumpkin pie spice,False
+apple pie spice,pumpkin pie spice,False
+chat masala,garam masala,False
+masala,garam masala,False
+peppercorn,black peppercorn,False
+whole black peppercorn,black peppercorn,False
+green peppercorn,black peppercorn,False
+szechuan peppercorn,black peppercorn,False
+leg of lamb,lamb,False
+racks of lamb,lamb,False
+rack of lamb,lamb,False
+lemon pepper seasoning,poultry seasoning,False
+accent seasoning,poultry seasoning,False
+adobo seasoning,poultry seasoning,False
+unsweetened pineapple chunk,pineapple chunk,False
+stew beef chunk,pineapple chunk,False
+cider,apple cider,False
+sparkling apple cider,apple cider,False
+hard alcoholic cider,apple cider,False
+hard apple cider,apple cider,False
+dry cider,apple cider,False
+mixed herb,herb,False
+frozen corn kernel,corn kernel,False
+canned corn kernel,corn kernel,False
+mini marshmallow,miniature marshmallow,False
+colored miniature marshmallow,miniature marshmallow,False
+dry linguine,linguine,False
+canned tuna,tuna,False
+albacore tuna,tuna,False
+solid white tuna,tuna,False
+chunk tuna,tuna,False
+ahi tuna,tuna,False
+hickory liquid smoke,liquid smoke,False
+black currant,currant,False
+red currant,currant,False
+lime wedge,lemon wedge,False
+frozen rhubarb,rhubarb,False
+israeli couscou,couscou,False
+red lentil,lentil,False
+brown lentil,lentil,False
+green lentil,lentil,False
+dry lentil,lentil,False
+split red lentil,lentil,False
+dry green lentil,lentil,False
+yellow lentil,lentil,False
+french lentil,lentil,False
+black lentil,lentil,False
+marmalade,orange marmalade,False
+low fat creme fraiche,creme fraiche,False
+chocolate graham cracker,graham cracker,False
+honey graham cracker,graham cracker,False
+cinnamon graham cracker,graham cracker,False
+low fat graham cracker,graham cracker,False
+red beet,beet,False
+silver beet,beet,False
+smoked salmon,salmon,False
+pink salmon,salmon,False
+red salmon,salmon,False
+canned salmon,salmon,False
+instant coffee,coffee,False
+brewed coffee,coffee,False
+strong black coffee,coffee,False
+espresso coffee,coffee,False
+black coffee,coffee,False
+very strong coffee,coffee,False
+powdered instant coffee,coffee,False
+frozen blackberry,blackberry,False
+littleneck clam,clam,False
+canned clam,clam,False
+unsalted shelled pistachio,pistachio,False
+pudding,instant vanilla pudding,False
+french vanilla instant pudding,instant vanilla pudding,False
+instant lemon pudding,instant vanilla pudding,False
+chocolate instant pudding,instant vanilla pudding,False
+chocolate pudding,instant vanilla pudding,False
+prepared vanilla pudding,instant vanilla pudding,False
+butterscotch pudding,instant vanilla pudding,False
+banana cream instant pudding,instant vanilla pudding,False
+pumpkin pie filling,cherry pie filling,False
+instant vanilla flavor pudding and pie filling,cherry pie filling,False
+lemon flavor instant pudding and pie filling,cherry pie filling,False
+raspberry pie filling,cherry pie filling,False
+frozen puff pastry,puff pastry,False
+phyllo pastry,puff pastry,False
+premade puff pastry,puff pastry,False
+french baguette,baguette,False
+sourdough baguette,baguette,False
+powdered saffron,saffron,False
+pickle,dill pickle,False
+sweet pickle,dill pickle,False
+kosher dill pickle,dill pickle,False
+bread and butter pickle,dill pickle,False
+sour dill pickle,dill pickle,False
+imitation bacon bit,bacon bit,False
+dill pickle spear,asparagus spear,False
+serrano chili,green chili,False
+anaheim chili,green chili,False
+ancho chili,green chili,False
+mild green chili,green chili,False
+calimyrna fig,fig,False
+spinach fettuccine,fettuccine,False
+dry fettuccine,fettuccine,False
+liquid sweetener,artificial sweetener,False
+dry sweetener,artificial sweetener,False
+allspice berry,berry,False
+mixed berry,berry,False
+frozen mixed berry,berry,False
+green capsicum,red capsicum,False
+seasoned crouton,crouton,False
+garlic flavored crouton,crouton,False
+herbed crouton,crouton,False
+dill pickle slice,lemon slice,False
+strawberry slice,lemon slice,False
+crabmeat,lump crabmeat,False
+frozen crabmeat,lump crabmeat,False
+chipotle chile in adobo,chipotle chiles in adobo,False
+turkey kielbasa,kielbasa,False
+smoked kielbasa,kielbasa,False
+polska kielbasa,kielbasa,False
+polish kielbasa,kielbasa,False
+center cut pork chop,pork chop,False
+pork loin chop,pork chop,False
+low sodium tamari,tamari,False
+barley,pearl barley,False
+quick cooking barley,pearl barley,False
+pot barley,pearl barley,False
+bouillon,chicken bouillon,False
+instant chicken bouillon,chicken bouillon,False
+chicken flavor instant bouillon,chicken bouillon,False
+daikon radishe,radishe,False
+red radishe,radishe,False
+scallop,sea scallop,False
+bay scallop,sea scallop,False
+guar gum,xanthan gum,False
+anise,star anise,False
+graham cracker crust,graham cracker pie crust,False
+prepared graham cracker crust,graham cracker pie crust,False
+reduced fat graham cracker crust,graham cracker pie crust,False
+inch graham cracker crust,graham cracker pie crust,False
+graham cracker crumb crust,graham cracker pie crust,False
+seedless watermelon,watermelon,False
+green cardamom pod,cardamom pod,False
+black cardamom pod,cardamom pod,False
+whole cardamom pod,cardamom pod,False
+whole wheat english muffin,english muffin,False
+corned beef brisket,beef brisket,False
+red chile,jalapeno chile,False
+poblano chile,jalapeno chile,False
+chipotle chile,jalapeno chile,False
+chile,jalapeno chile,False
+ancho chile,jalapeno chile,False
+green chile,jalapeno chile,False
+canned chipotle chile,jalapeno chile,False
+arbol chile,jalapeno chile,False
+pureed chipotle chile,jalapeno chile,False
+frozen okra,okra,False
+frozen cut okra,okra,False
+canola oil cooking spray,olive oil flavored cooking spray,False
+red plum,plum,False
+purple plum,plum,False
+spanish olives with pimento,pimento,False
+matzo meal,flax seed meal,False
+hazelnut meal,flax seed meal,False
+amaretto liqueur,cointreau liqueur,False
+amarula cream liqueur,cointreau liqueur,False
+hazelnut flavored liqueur,cointreau liqueur,False
+almond flavored liqueur,cointreau liqueur,False
+tapioca starch,potato starch,False
+daikon radish,radish,False
+red radish,radish,False
+squash,acorn squash,False
+spaghetti squash,acorn squash,False
+chutney,mango chutney,False
+fruit chutney,mango chutney,False
+major grey chutney,mango chutney,False
+jumbo pasta shell,pasta shell,False
+puff pastry shell,pasta shell,False
+frozen puff pastry shell,pasta shell,False
+grape,red seedless grape,False
+seedless grape,red seedless grape,False
+green seedless grape,red seedless grape,False
+green grape,red seedless grape,False
+red grape,red seedless grape,False
+white grape,red seedless grape,False
+black grape,red seedless grape,False
+hash brown,frozen hash brown,False
+vermouth,dry vermouth,False
+sweet vermouth,dry vermouth,False
+dry white vermouth,dry vermouth,False
+summer savory,savory,False
+sun tomato pesto,basil pesto,False
+marinated artichoke,artichoke,False
+white creme de cacao,creme de cacao,False
+liquid stevia,stevia,False
+beef dripping,bacon dripping,False
+white miso,miso,False
+red miso,miso,False
+yellow miso,miso,False
+non dairy whipped topping,cool whip topping,False
+frozen non dairy topping,cool whip topping,False
+liver,chicken liver,False
+calf liver,chicken liver,False
+broccoli stem,cilantro stem,False
+parsley stem,cilantro stem,False
+mushroom stem,cilantro stem,False
+mixed lettuces and spring green,green,False
+lettuce green,green,False
+lemon juice concentrate,frozen limeade concentrate,False
+frozen cranberry juice concentrate,frozen limeade concentrate,False
+powdered soy protein concentrate,frozen limeade concentrate,False
+pink grapefruit,grapefruit,False
+red grapefruit,grapefruit,False
+curacao,blue curacao,False
+orange curacao,blue curacao,False
+chicken fat,bacon fat,False
+duck fat,bacon fat,False
+gluten,vital wheat gluten,False
+wheat gluten,vital wheat gluten,False
+fine semolina,semolina,False
+melon,honeydew melon,False
+bitter melon,honeydew melon,False
+currant jelly,red currant jelly,False
+green onions with top,green onion top,False
+scallion top,green onion top,False
+celery top,green onion top,False
+tapioca,quick cooking tapioca,False
+minute tapioca,quick cooking tapioca,False
+dry tapioca,quick cooking tapioca,False
+pearl tapioca,quick cooking tapioca,False
+macaroni noodle,spaghetti noodle,False
+udon noodle,spaghetti noodle,False
+tagliatelle pasta noodle,spaghetti noodle,False
+cellophane noodle,spaghetti noodle,False
+bean thread noodle,spaghetti noodle,False
+dry lasagna noodle,spaghetti noodle,False
+pasta noodle,spaghetti noodle,False
+black tea,tea,False
+instant tea,tea,False
+phyllo pastry sheet,puff pastry sheet,False
+rice paper sheet,puff pastry sheet,False
+live lobster,lobster,False
+green plantain,plantain,False
+white hominy,hominy,False
+yellow hominy,hominy,False
+mushroom cap,portabella mushroom cap,False
+smoked ham hock,ham hock,False
+white chocolate curl,chocolate curl,False
+pepperidge farm herb stuffing,prepared stuffing,False
+liquid smoke flavoring,vanilla flavoring,False
+ham shank,lamb shank,False
+quick cooking grit,grit,False
+yucca root,celery root,False
+dry marsala,marsala,False
+bulgur wheat,bulgar wheat,False
+endive,belgian endive,False
+green creme de menthe,creme de menthe,False
+white creme de menthe,creme de menthe,False
+graham cracker square,white chocolate baking square,False
+baker s unsweetened chocolate square,white chocolate baking square,False
+channa dal,urad dal,False
+beef suet,suet,False
+pork sausage link,sweet italian sausage link,False
+hot italian sausage link,sweet italian sausage link,False
+cheese spread,cream cheese spread,False
+i can t believe it s not butter spread,cream cheese spread,False
+lumpia skin,wonton skin,False
+smoked trout,trout,False
+beef round,beef eye round,False
+white chocolate baking bar,chocolate bar,False
+low fat ricotta,ricotta,False
+french fry,frozen french fry,False
+buffalo mozzarella,low fat mozzarella,False
+whole milk mozzarella,low fat mozzarella,False
+yeast cake,compressed yeast cake,False
+black treacle,treacle,False
+red caviar,black caviar,False
+agar,agar agar,False
