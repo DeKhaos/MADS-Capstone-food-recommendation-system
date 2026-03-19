@@ -19,6 +19,14 @@ or you can also use the customized Makefile command, which include creating .env
 make setup
 ```
 
+## Start the application
+
+To run the web UI locally, you can run the following command, it will host the application in a local port.
+
+```
+python -m dash_app.app
+```
+
 ## Project Organization
 
 ```
