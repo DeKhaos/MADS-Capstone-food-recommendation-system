@@ -317,7 +317,7 @@ def user_profile_modal(login_id):
         """
         
         if login_store_status != {} and (login_store_status is not None):
-            if initial_state == {} or initial_state is None:
+            if initial_state == {} or (not all(initial_state.values())):  # handle login/logout state
 
                 #PLACEHOLDER: Load initial preferences from database
                 initial_cuisine = np.random.choice(
