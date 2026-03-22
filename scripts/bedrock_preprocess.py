@@ -146,9 +146,6 @@ Important classification rules:
 6. health_profile should reflect nutrition oriented tags only, such as:
    ["High Protein", "Moderate Protein", "Low Protein", "High Fiber", "Moderate Fiber", "Low Fiber", "sour", "Low Carb", "Low Fat", "Calorie Dense", "Balanced"]
 
-7. taste should reflect one of the following tags:
-   ["spicy", "sweet", "bitter", "savory"]
-
 Return JSON only.
 
 Schema:
@@ -167,8 +164,6 @@ Schema:
   "review_sentiment": "Positive|Mixed|Negative",
   "review_quality": "Highly Reviewed|Mixed Reception|Poorly Reviewed",
   "review_themes": ["string"],
-  "occasion_tags": ["string"],
-  "taste": ["string"]
 }
 """
 
