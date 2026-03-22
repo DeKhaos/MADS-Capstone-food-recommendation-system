@@ -135,27 +135,11 @@ fiber_level
 
 Important classification rules:
 
-1. Use only structured recipe content such as title, ingredients, instructions, and nutrition fields for cuisine, dietary_tags, allergens, cooking_methods, health_profile, protein_level, and fiber related classification.
+1. Use only structured recipe content such as title, ingredients, instructions, and nutrition fields for cuisine and allergens.
 
-2. If nutrition data includes protein in grams, classify protein_level using these exact thresholds:
-   High Protein = protein_g >= 30
-   Moderate Protein = protein_g > 10 and protein_g < 30
-   Low Protein = protein_g <= 10
+2. meal_type should be limited to either breakfast, lunch, dinner, dessert and beverages.
 
-3. If nutrition data includes fiber in grams, add one of the following fiber indicators to health_profile:
-   High Fiber = fiber_g >= 8
-   Moderate Fiber = fiber_g > 3 and fiber_g < 8
-   Low Fiber = fiber_g <= 3
-
-4. Do not guess protein_level or fiber classification from reviews.
-
-5. If protein or fiber data is missing, infer cautiously from ingredients only when strongly supported. If not strongly supported, return an empty value or omit that specific label.
-
-6. health_profile should reflect nutrition oriented tags only, such as:
-   ["High Protein", "Moderate Protein", "Low Protein", "High Fiber", "Moderate Fiber", "Low Fiber", "Low Carb", "Low Fat", "Calorie Dense", "Balanced"]
-
-7. taste should reflect one of the following tags:
-   ["spicy", "sweet", "bitter", "savory", "sour"]
+3. allergens should be limited to celery, gluten, crustaceans, eggs, fish, lupin, milk, molluscs, mustard, nuts, peanuts, sesame seeds, sulphur dioxide and soy
 
 Return JSON only.
 
@@ -165,18 +149,8 @@ Schema:
   "recipe_id": "string",
   "cuisine": ["string"],
   "meal_type": ["string"],
-  "dietary_tags": ["string"],
   "allergens": ["string"],
   "cooking_methods": ["string"],
-  "main_protein": ["string"],
-  "protein_level": "High Protein|Moderate Protein|Low Protein|Unknown",
-  "health_profile": ["string"],
-  "difficulty": "Easy|Medium|Advanced",
-  "review_sentiment": "Positive|Mixed|Negative",
-  "review_quality": "Highly Reviewed|Mixed Reception|Poorly Reviewed",
-  "review_themes": ["string"],
-  "occasion_tags": ["string"],
-  "taste": ["string"]
 }'''
 
 
@@ -265,11 +239,6 @@ dummy_recipe = {
     "prep_time": 10,
     "cook_time": 20,
     "total_time": 30,
-    "review_summary": [
-        "This recipe was delicious and easy to make.",
-        "Great weeknight dinner.",
-        "Flavorful and simple."
-    ]
 }
 
 
