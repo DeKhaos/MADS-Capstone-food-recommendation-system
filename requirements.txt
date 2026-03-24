@@ -42,6 +42,7 @@ ipython==9.10.0
 ipython_pygments_lexers==1.1.1
 isort==7.0.0
 itsdangerous==2.2.0
+ipywidgets==8.1.5
 jedi==0.19.2
 Jinja2==3.1.6
 joblib==1.5.3
@@ -110,4 +111,6 @@ win32_setctime==1.2.0
 xxhash==3.6.0
 yarl==1.22.0
 zipp==3.23.0
+--extra-index-url https://download.pytorch.org/whl/cu126
+torch==2.10.0+cu126
 -e .
