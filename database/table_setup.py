@@ -32,7 +32,7 @@ EXCEPTION
 END $$;
 
 DO $$ BEGIN
-    CREATE TYPE nutrition_content_enum AS ENUM ('high', 'medium', 'low');
+    CREATE TYPE nutrition_content_enum AS ENUM ('high', 'medium', 'low', 'unknown');
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
@@ -73,6 +73,9 @@ CREATE TABLE IF NOT EXISTS recipes (
     meal_type_id BIGINT REFERENCES meal_types(meal_type_id),
     protein_content nutrition_content_enum,
     fiber_content nutrition_content_enum,
+    fat_content nutrition_content_enum,
+    carbohydrate_content nutrition_content_enum,
+    sodium_content nutrition_content_enum,
     difficulty difficulty_enum,
     calories INTEGER,
     ingredients JSONB,
@@ -154,14 +157,20 @@ INSERT INTO dietary_tags (name) VALUES
 ON CONFLICT (name) DO NOTHING;
 
 INSERT INTO allergens (name) VALUES
+    ('celery'),
+    ('gluten'),
+    ('crustaceans'),
+    ('eggs'),
+    ('fish'),
+    ('lupin'),
+    ('milk'),
+    ('molluscs'),
+    ('mustard'),
     ('nuts'),
-    ('dairy'),
-    ('wheat'),
-    ('grains'),
-    ('seafood'),
-    ('shellfish'),
-    ('soy'),
-    ('eggs')
+    ('peanuts'),
+    ('sesame seeds'),
+    ('sulphur dioxide'),
+    ('soy')
 ON CONFLICT (name) DO NOTHING;
 
 INSERT INTO cooking_methods (name) VALUES
