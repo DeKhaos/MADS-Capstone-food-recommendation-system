@@ -114,25 +114,6 @@ The last character must be }
 Classify cleaned recipe records into structured JSON
 for a food recommendation system.
 
-Anti-leakage rules:
-
-Reviews may only be used for:
-difficulty
-review_sentiment
-review_quality
-review_themes
-occasion_tags
-taste
-
-Reviews must NOT be used for:
-cuisine
-dietary_tags
-allergens
-cooking_methods
-health_profile
-protein_level
-fiber_level
-
 Important classification rules:
 
 1. Use only structured recipe content such as title, ingredients, instructions, and nutrition fields for cuisine and allergens.
@@ -238,7 +219,7 @@ dummy_recipe = {
     },
     "prep_time": 10,
     "cook_time": 20,
-    "total_time": 30,
+    "total_time": 30
 }
 
 
