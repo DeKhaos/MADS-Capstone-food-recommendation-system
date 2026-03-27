@@ -117,6 +117,7 @@ for a food recommendation system.
 Important classification rules:
 
 1. Use only structured recipe content such as title, ingredients, instructions, and nutrition fields for cuisine and allergens.
+1. Use only structured recipe content such as title, ingredients, instructions, and nutrition fields for cuisine and allergens.
 
 2. meal_type should be limited to either breakfast, lunch, dinner, dessert and beverages.
 
