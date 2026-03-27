@@ -16,11 +16,11 @@ load_dotenv()
 # DB config
 # --------------------------------------------------
 DB_CONFIG = {
-    "host": os.getenv("DB_HOST", "food-tasters.cctysvuxscld.us-east-1.rds.amazonaws.com"),
+    "host": os.getenv("DB_HOST"),
+    "dbname": os.getenv("DB_NAME"),
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PASSWORD"),
     "port": int(os.getenv("DB_PORT", 5432)),
-    "dbname": os.getenv("DB_NAME", "recipes"),
-    "user": os.getenv("DB_USER", "foodies"),
-    "password": os.getenv("DB_PASSWORD", "Capstone699MADS!"),
     "sslmode": os.getenv("DB_SSLMODE", "require"),
 }
 
