@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 # --------------------------------------------------
 # Load environment variables from .env
 # --------------------------------------------------
-load_dotenv()
+load_dotenv("connect.env")
 
 # --------------------------------------------------
 # Connection configuration
@@ -69,23 +69,23 @@ CREATE TABLE IF NOT EXISTS cooking_methods (
 
 CREATE TABLE IF NOT EXISTS recipes (
     recipe_id VARCHAR(100) PRIMARY KEY,
+    original_recipe_id VARCHAR(100),
     cuisine_id BIGINT REFERENCES cuisines(cuisine_id),
     meal_type_id BIGINT REFERENCES meal_types(meal_type_id),
-    protein_content nutrition_content_enum,
-    fiber_content nutrition_content_enum,
-    fat_content nutrition_content_enum,
-    carbohydrate_content nutrition_content_enum,
-    sodium_content nutrition_content_enum,
+    protein_content nutrition_content_enum DEFAULT 'unknown',
+    fiber_content nutrition_content_enum DEFAULT 'unknown',
+    fat_content nutrition_content_enum DEFAULT 'unknown',
+    carbohydrate_content nutrition_content_enum DEFAULT 'unknown',
+    sodium_content nutrition_content_enum DEFAULT 'unknown',
     difficulty difficulty_enum,
     calories INTEGER,
     ingredients JSONB,
     instructions JSONB,
-    prep_time INTEGER,
-    cook_time INTEGER,
-    total_time INTEGER,
-    review_quantity VARCHAR(20),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    prep_time INTEGER NULL,
+    cook_time INTEGER NULL,
+    total_time INTEGER NULL,
+    image_url TEXT NULL,
+    s3_key TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS recipe_dietary_tags (
@@ -144,7 +144,8 @@ INSERT INTO meal_types (name) VALUES
     ('dinner'),
     ('snack'),
     ('dessert'),
-    ('beverage')
+    ('beverage'),
+    ('side')
 ON CONFLICT (name) DO NOTHING;
 
 INSERT INTO dietary_tags (name) VALUES
@@ -189,11 +190,12 @@ ON CONFLICT (name) DO NOTHING;
 """
 
 # --------------------------------------------------
-# Optional indexes
+# Indexes
 # --------------------------------------------------
 CREATE_INDEXES_SQL = """
 CREATE INDEX IF NOT EXISTS idx_recipes_cuisine_id ON recipes(cuisine_id);
 CREATE INDEX IF NOT EXISTS idx_recipes_meal_type_id ON recipes(meal_type_id);
+CREATE INDEX IF NOT EXISTS idx_recipes_s3_key ON recipes(s3_key);
 CREATE INDEX IF NOT EXISTS idx_recipe_dietary_tags_recipe_id ON recipe_dietary_tags(recipe_id);
 CREATE INDEX IF NOT EXISTS idx_recipe_cooking_methods_recipe_id ON recipe_cooking_methods(recipe_id);
 CREATE INDEX IF NOT EXISTS idx_recipe_allergens_recipe_id ON recipe_allergens(recipe_id);
