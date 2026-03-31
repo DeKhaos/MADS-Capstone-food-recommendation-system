@@ -20,6 +20,7 @@ import json
 import os
 import re
 import boto3
+
 import configparser
 
 from io import StringIO
@@ -201,7 +202,7 @@ dummy_recipe = {
         "chickpeas",
         "onion",
         "garlic",
-        "coconut milk",
+        "heavy cream",
         "curry powder"
     ],
     "instructions": [

@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 # --------------------------------------------------
 # Load environment variables
 # --------------------------------------------------
-load_dotenv()
+load_dotenv("connect.env")
 
 # --------------------------------------------------
 # DB config
