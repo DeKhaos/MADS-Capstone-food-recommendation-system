@@ -81,6 +81,8 @@ CREATE TABLE IF NOT EXISTS recipes (
     calories INTEGER,
     ingredients JSONB,
     instructions JSONB,
+    who_score NUMERIC,
+    fsa_score NUMERIC,
     prep_time INTEGER NULL,
     cook_time INTEGER NULL,
     total_time INTEGER NULL,
