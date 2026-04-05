@@ -4,7 +4,7 @@ import dash_mantine_components as dmc
 import dash_bootstrap_components as dbc
 import pandas as pd
 import numpy as np
-
+import json
 from .modals import recommendation_card,recipe_info_modal,recipe_statistic_modal
 from . dummy_data import generate_recipe_statistic
 
@@ -587,6 +587,7 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
         recommendation_data = {}
         #PLACEHOLDER: Logic to generate recommendation and its statistics from database in the server
         if filter_dict!={}:
+            print(pd.DataFrame(filter_dict))
             recipe_statistics = generate_recipe_statistic(filter_dict,profile_dict,n_candidate)
 
             output_list = []  # Output top + bottom recommendation
