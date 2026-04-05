@@ -4,7 +4,7 @@ import dash_mantine_components as dmc
 import dash_bootstrap_components as dbc
 import pandas as pd
 import numpy as np
-
+import json
 from .modals import recommendation_card,recipe_info_modal,recipe_statistic_modal
 from . dummy_data import generate_recipe_statistic
 
@@ -100,11 +100,11 @@ def shared_filters(trigger_id, store_id):
         "stewing",
     ]
 
-    calory_range = [100, 400, 800, 1500, 2000]
-    calory_marks = [str(item) for item in calory_range]
-    calory_marks[0] = "≤" + calory_marks[0]
-    calory_marks[-1] = "≥" + calory_marks[-1]
-    calory_marks = dict(zip(calory_range, calory_marks))
+    calorie_range = [100, 400, 800, 1500, 2000]
+    calorie_marks = [str(item) for item in calorie_range]
+    calorie_marks[0] = "≤" + calorie_marks[0]
+    calorie_marks[-1] = "≥" + calorie_marks[-1]
+    calorie_marks = dict(zip(calorie_range, calorie_marks))
 
     macro_nutrients = {
         "cholesterol": ([0, 100], "mg"),
@@ -281,18 +281,18 @@ def shared_filters(trigger_id, store_id):
                 ),
                 html.Hr(),
 
-                filter_header("Calory range (kcal)","calory","filter_slider","priority"),
+                filter_header("Calorie range (kcal)","calorie","filter_slider","priority"),
                 dbc.Collapse(
                     dcc.RangeSlider(
-                        min(calory_range),
-                        max(calory_range),
-                        value=[min(calory_range),max(calory_range)],
-                        marks=calory_marks,
-                        id={"filter": "filter_slider", "name": "calory"},
+                        min(calorie_range),
+                        max(calorie_range),
+                        value=[min(calorie_range),max(calorie_range)],
+                        marks=calorie_marks,
+                        id={"filter": "filter_slider", "name": "calorie"},
                         className="w-75",
                     ),
                     is_open = False,
-                    id = {"name": "calory","type":"filter_control","filter": "filter_slider","collapse":1}
+                    id = {"name": "calorie","type":"filter_control","filter": "filter_slider","collapse":1}
                 ),
                 html.Hr(),
 
@@ -587,6 +587,7 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
         recommendation_data = {}
         #PLACEHOLDER: Logic to generate recommendation and its statistics from database in the server
         if filter_dict!={}:
+            # print(pd.DataFrame(filter_dict))
             recipe_statistics = generate_recipe_statistic(filter_dict,profile_dict,n_candidate)
 
             output_list = []  # Output top + bottom recommendation

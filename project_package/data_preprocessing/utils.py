@@ -1,4 +1,5 @@
 from tqdm.auto import tqdm
+from typing import Union
 
 import pandas as pd
 from sklearn.utils import gen_batches
@@ -77,7 +78,7 @@ def create_user_preference(
         keep_cols = [user_id,record_id,f'normalized_{rating_col}']
 
         # Retrieve only batch user_id reviews
-        buffer_df = reviews.iloc[
+        buffer_df = reviews.loc[
             reviews[user_id].isin(user_list[batch])
         ][keep_cols].copy()
 
@@ -123,3 +124,95 @@ def create_user_preference(
 
     preference_df.reset_index(drop=True,inplace=True)
     return preference_df
+
+def chroma_filter_operator(
+    filter_data: Union[dict,pd.DataFrame],
+    operator_type_mapping: Union[dict,pd.DataFrame],
+    filter_name_mapping: dict = None
+):
+    """
+    Support creating metadata filtering syntax that can be feed into the Chroma vectorstore as retriever.
+
+    Parameters
+    ----------
+
+    filter_data: dict | pd.DataFrame
+        Filter information retrieved from UI filters, which is store in the dcc.Store(id=<filter_store_id>).
+        The filter values will always be either a list of label, or a 2-items list used in range slider.
+
+    operator_type_mapping: dict | pd.DataFrame
+        Mapping which Chroma vectorstore logic operations to use for each filter. The input template should be
+        like this dict(
+            filter_name = [<filter_name1>,<filter_name2>,...],
+            operator_type = [<chain_operator1>,<chain_operator2>,...]
+        )
+
+        Example for chain operator: 
+            If the record value is string, use $in or $nin. 
+            If the record value is number then use $in or $nin, $range should be used if the filter is a range slider.
+            If the record value is a list of labels, use chain operator with iether $or or $and follow by ':' then
+            $contains or $not_contains. E.g $or:$contains
+            NOTE: $range is a custom syntax for this function. For more Chroma vectorstore syntax, please refer to
+            https://docs.trychroma.com/docs/querying-collections/metadata-filtering#using-inclusion-operators
+
+        filter_name_mapping: dict
+            Map the filter names to the vectorstore column names if their names are different.
+        
+    Returns
+    ----------
+
+    filter_operators: dict
+        Return a dictionary of nested chain operator for each filter.
+    """
+
+    if not isinstance(filter_data,pd.DataFrame):
+        filter_data = pd.DataFrame(filter_data)
+    
+    if not isinstance(operator_type_mapping,pd.DataFrame):
+        operator_type_df = pd.DataFrame(operator_type_mapping)
+    else:
+        operator_type_df = operator_type_mapping
+        
+    applicable_filters = filter_data.loc[filter_data['priority_type']=="exact"].copy()  # create operators only for exact filters
+    if applicable_filters.shape[0] == 0:
+        return {}
+    
+    operator_type_df = pd.DataFrame(operator_type_mapping)
+
+    if filter_name_mapping is not None:
+        applicable_filters['filter_name'] = applicable_filters['filter_name'].apply(lambda x:filter_name_mapping.get(x,x))
+        operator_type_df['filter_name'] = operator_type_df['filter_name'].apply(lambda x:filter_name_mapping.get(x,x))
+        
+    applicable_filters = applicable_filters.merge(operator_type_df,on='filter_name')
+
+    filter_operators = []
+
+    for _,info in applicable_filters.iterrows():
+        if info["filter_value"] in (None,[]):  # skip filters that don't have a value
+            continue
+        elif info["operator_type"] == "$range":  # range slider
+            add_operators = {
+                "$and":[
+                    {info["filter_name"]: {"$gte": info["filter_value"][0]}},
+                    {info["filter_name"]: {"$lte": info["filter_value"][1]}},
+                ]
+            }
+        elif ':' in info["operator_type"]:  # handle logic for comparing a list of filter items with the record item list.
+            and_or_operator,contain_operator = info["operator_type"].split(":")
+            add_operators = {
+                and_or_operator:[
+                    {info["filter_name"]:{contain_operator:item}} for item in info["filter_value"]
+                ]
+            }
+        else: # "$in|$nin"
+            add_operators = {
+                info["filter_name"]:{info["operator_type"]:info["filter_value"]}
+            }
+        filter_operators.append(add_operators)
+    
+    if len(filter_operators) == 1:
+        filter_operators = filter_operators[0]
+    else:
+        filter_operators = {"$and":filter_operators}  # each distinct filter operators must match
+    
+    return filter_operators
