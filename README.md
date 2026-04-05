@@ -19,6 +19,11 @@ or you can also use the customized Makefile command, which include creating .env
 make setup
 ```
 
+There is a few extra libraries that require CUDA but pip can't detect your machine CUDA version upfront, so you have to install it yourself after figure out whether your machine support CUDA and which version it is.
+
+The list of libraries that require CUDA: 
+- `torch` : for example my machine can use `pip install torch --index-url https://download.pytorch.org/whl/cu126`
+
 ## Start the application
 
 To run the web UI locally, you can run the following command, it will host the application in a local port.
