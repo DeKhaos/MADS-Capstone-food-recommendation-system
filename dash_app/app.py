@@ -16,6 +16,8 @@ app = dash.Dash(
     external_stylesheets=[dbc.themes.BOOTSTRAP, dbc_css]  
 )
 
+server = app.server
+
 theme_change = ThemeChangerAIO(aio_id="dbc_theme")
 
 mode_switch = dmc.ColorSchemeToggle(
@@ -105,5 +107,7 @@ app.layout = dmc.MantineProvider(
 
 if __name__ == '__main__':
     app.run(
-        debug=True
-        )
+        host ="0.0.0.0",
+        port=8080,
+        debug=False
+    )
