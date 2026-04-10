@@ -18,7 +18,9 @@ by AWS and press ENTER twice.
 
 import json
 import os
+import re
 import boto3
+
 import configparser
 
 from io import StringIO
@@ -42,7 +44,6 @@ MODEL_ID = os.getenv(
 # ----------------------------
 
 def get_credentials_from_block():
-
     print("\nPaste the AWS credential block exactly as provided.")
     print("Press ENTER twice when finished.\n")
 
@@ -54,7 +55,10 @@ def get_credentials_from_block():
             break
         lines.append(line)
 
-    credential_text = "\n".join(lines)
+    credential_text = "\n".join(lines).strip()
+
+    if not credential_text:
+        raise ValueError("No credential block was provided.")
 
     parser = configparser.ConfigParser()
     parser.read_file(StringIO(credential_text))
@@ -75,7 +79,6 @@ def get_credentials_from_block():
 
 
 def build_bedrock_client():
-
     access_key, secret_key, session_token = get_credentials_from_block()
 
     session = boto3.session.Session(
@@ -99,55 +102,26 @@ bedrock = build_bedrock_client()
 # ----------------------------
 
 def build_system_prompt():
+    return '''You are a food recipe enrichment engine.
 
-    return """
-You are a food recipe enrichment engine.
+Do not include explanations.
+Do not include markdown.
+Do not include code fences.
+Do not include comments.
+
+The first character of your response must be {
+The last character must be }
 
 Classify cleaned recipe records into structured JSON
 for a food recommendation system.
 
-Anti-leakage rules:
-
-Reviews may only be used for:
-difficulty
-review_sentiment
-review_quality
-review_themes
-occasion_tags
-taste
-
-Reviews must NOT be used for:
-cuisine
-dietary_tags
-allergens
-cooking_methods
-health_profile
-protein_level
-fiber_level
-
 Important classification rules:
 
-1. Use only structured recipe content such as title, ingredients, instructions, and nutrition fields for cuisine, dietary_tags, allergens, cooking_methods, health_profile, protein_level, and fiber related classification.
+1. Use only structured recipe content such as title, ingredients, instructions, and nutrition fields for cuisine and allergens.
 
-2. If nutrition data includes protein in grams, classify protein_level using these exact thresholds:
-   High Protein = protein_g >= 30
-   Moderate Protein = protein_g > 10 and protein_g < 30
-   Low Protein = protein_g <= 10
+2. meal_type should be limited to either breakfast, lunch, dinner, dessert and beverages.
 
-3. If nutrition data includes fiber in grams, add one of the following fiber indicators to health_profile:
-   High Fiber = fiber_g >= 8
-   Moderate Fiber = fiber_g > 3 and fiber_g < 8
-   Low Fiber = fiber_g <= 3
-
-4. Do not guess protein_level or fiber classification from reviews.
-
-5. If protein or fiber data is missing, infer cautiously from ingredients only when strongly supported. If not strongly supported, return an empty value or omit that specific label.
-
-6. health_profile should reflect nutrition oriented tags only, such as:
-   ["High Protein", "Moderate Protein", "Low Protein", "High Fiber", "Moderate Fiber", "Low Fiber", "sour", "Low Carb", "Low Fat", "Calorie Dense", "Balanced"]
-
-7. taste should reflect one of the following tags:
-   ["spicy", "sweet", "bitter", "savory"]
+3. allergens should be limited to celery, gluten, crustaceans, eggs, fish, lupin, milk, molluscs, mustard, nuts, peanuts, sesame seeds, sulphur dioxide and soy
 
 Return JSON only.
 
@@ -157,24 +131,12 @@ Schema:
   "recipe_id": "string",
   "cuisine": ["string"],
   "meal_type": ["string"],
-  "dietary_tags": ["string"],
   "allergens": ["string"],
   "cooking_methods": ["string"],
-  "main_protein": ["string"],
-  "protein_level": "High Protein|Moderate Protein|Low Protein|Unknown",
-  "health_profile": ["string"],
-  "difficulty": "Easy|Medium|Advanced",
-  "review_sentiment": "Positive|Mixed|Negative",
-  "review_quality": "Highly Reviewed|Mixed Reception|Poorly Reviewed",
-  "review_themes": ["string"],
-  "occasion_tags": ["string"],
-  "taste": ["string"]
-}
-"""
+}'''
 
 
 def build_user_prompt(recipe):
-
     return f"""
 Classify this recipe.
 
@@ -185,11 +147,21 @@ Recipe:
 
 
 # ----------------------------
+# JSON extraction helper
+# ----------------------------
+
+def extract_json(text):
+    match = re.search(r"\{.*\}", text, re.DOTALL)
+    if not match:
+        raise ValueError("No JSON object found in model response")
+    return json.loads(match.group())
+
+
+# ----------------------------
 # Bedrock call
 # ----------------------------
 
 def call_bedrock(recipe):
-
     response = bedrock.converse(
         modelId=MODEL_ID,
         system=[{"text": build_system_prompt()}],
@@ -210,8 +182,8 @@ def call_bedrock(recipe):
     output_text = response["output"]["message"]["content"][0]["text"]
 
     try:
-        parsed = json.loads(output_text)
-    except json.JSONDecodeError:
+        parsed = extract_json(output_text)
+    except Exception:
         print("\nRaw response from model:\n")
         print(output_text)
         raise
@@ -224,42 +196,31 @@ def call_bedrock(recipe):
 # ----------------------------
 
 dummy_recipe = {
-
     "recipe_id": "1024",
-
     "title": "Spicy Chickpea Curry",
-
     "ingredients_canonical": [
         "chickpeas",
         "onion",
         "garlic",
-        "coconut milk",
+        "heavy cream",
         "curry powder"
     ],
-
     "instructions": [
         "Saute onion and garlic.",
         "Add curry powder.",
         "Add chickpeas and coconut milk.",
         "Simmer for 20 minutes."
     ],
-
     "nutrition_summary": {
         "calories": 420,
         "protein_g": 15,
+        "fiber_g": 7,
         "fat_g": 18,
         "carbs_g": 38
     },
-
     "prep_time": 10,
     "cook_time": 20,
-    "total_time": 30,
-
-    "review_summary": [
-        "This recipe was delicious and easy to make.",
-        "Great weeknight dinner.",
-        "Flavorful and simple."
-    ]
+    "total_time": 30
 }
 
 
@@ -268,11 +229,9 @@ dummy_recipe = {
 # ----------------------------
 
 if __name__ == "__main__":
-
     print("\nSending recipe to Bedrock...\n")
 
     result = call_bedrock(dummy_recipe)
 
     print("Enriched Recipe Output\n")
-
     print(json.dumps(result, indent=2))
