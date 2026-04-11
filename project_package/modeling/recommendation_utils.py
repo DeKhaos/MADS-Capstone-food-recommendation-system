@@ -29,6 +29,8 @@ from langchain_core.documents import Document
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.document_compressors import FlashrankRerank
+import chromadb
+from chromadb.config import Settings
 from rank_bm25 import BM25Plus
 from flashrank import Ranker
 from sentence_transformers import SentenceTransformer
@@ -319,12 +321,61 @@ def doc_template_fill_in(
     ]
 
     return documents
-    
+
+def load_vector_store(
+    collection_name: str,
+    embedding_model: HuggingFaceEmbeddings,
+    persist_directory="./chroma_db"
+):
+    """
+    Utility function to load the Chroma vectorstore, priority trying to get the cloud service. If
+    not possible, switch to use local storage instead.
+
+    Parameters
+    ----------
+
+    collection_name: str
+            The collection name
+
+    embedding_model: HuggingFaceEmbeddings
+        The embedding model to transform the document
+
+    persist_directory: str
+        Local machine directory to store the vector storage if the cloud fails.
+
+    Returns
+    ----------
+    vectorstore: Chroma
+    """
+    try:
+        chroma_client = chromadb.HttpClient(
+            host=os.environ["CHROMA_HOST_IP"],
+            port=8000,
+            settings = Settings(
+                chroma_client_auth_provider="chromadb.auth.token_authn.TokenAuthClientProvider",
+                chroma_client_auth_credentials=os.environ["CHROMA_ACCESS_KEY"],
+                chroma_auth_token_transport_header="Authorization"
+            )
+        )
+        vectorstore = Chroma(
+            client=chroma_client,
+            collection_name=collection_name,
+            embedding_function=embedding_model,
+        )
+    except:
+        print("Couldn't load the cloud Chroma vectorstore, switching to local storage.")
+        vectorstore = Chroma(
+            collection_name=collection_name,
+            embedding_function=embedding_model,
+            persist_directory=persist_directory
+        )
+    return vectorstore
+
 class VectorstoreLoader:
     def __init__(
         self,
-        collection_name,
-        embedding,
+        collection_name: str,
+        embedding: HuggingFaceEmbeddings,
         doc_template: str,
         input_data: pd.DataFrame,
         format_cols: list,
@@ -334,6 +385,7 @@ class VectorstoreLoader:
         ):
         """
         Vectorstore loading class which help create documents from DataFrame and load it to vector store
+
         Parameters
         ----------
 
@@ -356,7 +408,7 @@ class VectorstoreLoader:
             List of columns to be used for document metadata.
 
         persist_directory: str
-            Location to store the vector storage.
+            Local machine directory to store the vector storage if the cloud fails.
 
         docID_col: str
             The column that hold unique record identifier.
@@ -365,22 +417,19 @@ class VectorstoreLoader:
         # Convert Pandas to Douments format
         self.raw_documents = doc_template_fill_in(doc_template,input_data,format_cols,meta_cols,docID_col)
 
-        self.vectorstore = Chroma(
-            collection_name=collection_name,
-            embedding_function=embedding,
-            persist_directory=persist_directory
-        )
+        self.vectorstore = load_vector_store(collection_name,embedding,persist_directory)
         self.current_index = 0  # use to resume to where document loader failed
 
 
-    def add_initial_documents(self,batch_size = 1000):
+    def add_initial_documents(self,batch_size:int = 1000,start_index:int=None):
         """
         Document loader. Restart this method to continue from where you failed.
         """
         print(f"Starting ingestion from index {self.current_index}...")
         start = time.perf_counter()
         break_ingestion = False
-
+        if start_index is not None:  # start from a user defined index instead
+            self.current_index = start_index
         for i in tqdm(range(self.current_index, len(self.raw_documents), batch_size)):
             batch = self.raw_documents[i : i + batch_size]
             
