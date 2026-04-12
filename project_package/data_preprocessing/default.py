@@ -3,7 +3,7 @@ This module store default variables
 """
 
 # Default column name in dataset
-USER = "UserId"
+USER = "AuthorId"
 ITEM = "RecipeId"
 RATING_COL = "Rating"
 RATING_ID = "ReviewId"

@@ -69,14 +69,15 @@ def save_dataframe_old(
 def read_data(
     file_name: str,
     directory: str ='datasets/raw',
-    convert_pandas: bool = True
+    convert_pandas: bool = True,
+    **kwargs
 ):
     path = directory + '/' + file_name + '*.csv'
     files = glob.glob(path)
 
     n = len(files)
     if n > 1:  # a dask directory with multiple csv
-        dask_df = dd.read_csv(path)
+        dask_df = dd.read_csv(path, assume_missing=True,**kwargs)
         # convert to pandas df
         if convert_pandas:
             pd_df = dask_df.compute().reset_index(drop=True)
@@ -84,7 +85,7 @@ def read_data(
         else:
             return dask_df
     elif n == 1:  # a csv file
-        pd_df = pd.read_csv(files[0])
+        pd_df = pd.read_csv(files[0],**kwargs)
         return pd_df
     else:
         raise Exception('No file found.')
