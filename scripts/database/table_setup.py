@@ -1,6 +1,5 @@
-import psycopg
-import os
 
+import os
 import psycopg
 from dotenv import load_dotenv
 
@@ -26,7 +25,7 @@ DB_CONFIG = {
 # --------------------------------------------------
 CREATE_TYPES_SQL = """
 DO $$ BEGIN
-    CREATE TYPE difficulty_enum AS ENUM ('easy', 'medium', 'hard', 'expert');
+    CREATE TYPE difficulty_enum AS ENUM ('beginner', 'intermediate', 'advanced');
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
@@ -36,172 +35,114 @@ DO $$ BEGIN
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
+
+DO $$ BEGIN
+    CREATE TYPE cuisine_enum AS ENUM (
+        'asian',
+        'european',
+        'mediterranean',
+        'american',
+        'african',
+        'latin',
+        'fusion',
+        'unknown'
+    );
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE cooking_method_enum AS ENUM (
+        'steam',
+        'sautee',
+        'grill',
+        'broil',
+        'fry',
+        'boil',
+        'sous_vide',
+        'poach',
+        'simmer',
+        'braise',
+        'stew',
+        'bake',
+        'roast',
+        'stir_fry',
+        'unknown'
+    );
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 """
 
 # --------------------------------------------------
-# Create lookup tables and main tables
+# Main table
+# RDS stores only indexed fields plus the S3 key
+# recipe_id comes from the CSV RecipeId
 # --------------------------------------------------
 CREATE_TABLES_SQL = """
-CREATE TABLE IF NOT EXISTS cuisines (
-    cuisine_id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE
-);
-
-CREATE TABLE IF NOT EXISTS meal_types (
-    meal_type_id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE
-);
-
-CREATE TABLE IF NOT EXISTS dietary_tags (
-    dietary_tag_id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE
-);
-
-CREATE TABLE IF NOT EXISTS allergens (
-    allergen_id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE
-);
-
-CREATE TABLE IF NOT EXISTS cooking_methods (
-    cooking_method_id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE
-);
-
 CREATE TABLE IF NOT EXISTS recipes (
-    recipe_id VARCHAR(100) PRIMARY KEY,
-    original_recipe_id VARCHAR(100),
-    cuisine_id BIGINT REFERENCES cuisines(cuisine_id),
-    meal_type_id BIGINT REFERENCES meal_types(meal_type_id),
+    recipe_id BIGSERIAL PRIMARY KEY,
+    original_id VARCHAR(100) NOT NULL,
+    source VARCHAR(100) NOT NULL,
+    cuisine cuisine_enum DEFAULT 'unknown',
+    cooking_method cooking_method_enum[] DEFAULT ARRAY['unknown']::cooking_method_enum[],
+    difficulty difficulty_enum,
     protein_content nutrition_content_enum DEFAULT 'unknown',
     fiber_content nutrition_content_enum DEFAULT 'unknown',
     fat_content nutrition_content_enum DEFAULT 'unknown',
     carbohydrate_content nutrition_content_enum DEFAULT 'unknown',
     sodium_content nutrition_content_enum DEFAULT 'unknown',
-    difficulty difficulty_enum,
-    calories INTEGER,
-    ingredients JSONB,
-    instructions JSONB,
-    who_score NUMERIC,
-    fsa_score NUMERIC,
-    prep_time INTEGER NULL,
-    cook_time INTEGER NULL,
-    total_time INTEGER NULL,
-    image_url TEXT NULL,
-    s3_key TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS recipe_dietary_tags (
-    id BIGSERIAL PRIMARY KEY,
-    recipe_id VARCHAR(100) NOT NULL REFERENCES recipes(recipe_id) ON DELETE CASCADE,
-    dietary_tag_id BIGINT NOT NULL REFERENCES dietary_tags(dietary_tag_id) ON DELETE CASCADE,
-    UNIQUE (recipe_id, dietary_tag_id)
-);
-
-CREATE TABLE IF NOT EXISTS recipe_cooking_methods (
-    id BIGSERIAL PRIMARY KEY,
-    recipe_id VARCHAR(100) NOT NULL REFERENCES recipes(recipe_id) ON DELETE CASCADE,
-    cooking_method_id BIGINT NOT NULL REFERENCES cooking_methods(cooking_method_id) ON DELETE CASCADE,
-    UNIQUE (recipe_id, cooking_method_id)
-);
-
-CREATE TABLE IF NOT EXISTS recipe_allergens (
-    id BIGSERIAL PRIMARY KEY,
-    recipe_id VARCHAR(100) NOT NULL REFERENCES recipes(recipe_id) ON DELETE CASCADE,
-    allergen_id BIGINT NOT NULL REFERENCES allergens(allergen_id) ON DELETE CASCADE,
-    UNIQUE (recipe_id, allergen_id)
-);
-
-CREATE TABLE IF NOT EXISTS users (
-    user_id BIGSERIAL PRIMARY KEY,
-    username VARCHAR(100),
-    email VARCHAR(255) UNIQUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS user_allergens (
-    id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-    allergen_id BIGINT NOT NULL REFERENCES allergens(allergen_id) ON DELETE CASCADE,
-    UNIQUE (user_id, allergen_id)
+    s3_key TEXT UNIQUE
 );
 """
 
 # --------------------------------------------------
-# Seed lookup tables
-# ON CONFLICT prevents duplicate inserts
+# Table cleanup
 # --------------------------------------------------
-SEED_LOOKUPS_SQL = """
-INSERT INTO cuisines (name) VALUES
-    ('asian'),
-    ('european'),
-    ('american'),
-    ('african'),
-    ('mediterranean'),
-    ('fusion')
-ON CONFLICT (name) DO NOTHING;
 
-INSERT INTO meal_types (name) VALUES
-    ('breakfast'),
-    ('lunch'),
-    ('dinner'),
-    ('snack'),
-    ('dessert'),
-    ('beverage'),
-    ('side')
-ON CONFLICT (name) DO NOTHING;
+DROP_SQL = """
+-- Drop table first (depends on enums)
+DROP TABLE IF EXISTS recipes CASCADE;
 
-INSERT INTO dietary_tags (name) VALUES
-    ('vegan'),
-    ('gluten_free'),
-    ('vegetarian'),
-    ('keto'),
-    ('grain_free'),
-    ('seafood')
-ON CONFLICT (name) DO NOTHING;
+-- Drop enum types (must be done AFTER dropping tables)
+DO $$ BEGIN
+    DROP TYPE IF EXISTS cuisine_enum CASCADE;
+EXCEPTION
+    WHEN undefined_object THEN null;
+END $$;
 
-INSERT INTO allergens (name) VALUES
-    ('celery'),
-    ('gluten'),
-    ('crustaceans'),
-    ('eggs'),
-    ('fish'),
-    ('lupin'),
-    ('milk'),
-    ('molluscs'),
-    ('mustard'),
-    ('nuts'),
-    ('peanuts'),
-    ('sesame seeds'),
-    ('sulphur dioxide'),
-    ('soy')
-ON CONFLICT (name) DO NOTHING;
+DO $$ BEGIN
+    DROP TYPE IF EXISTS cooking_method_enum CASCADE;
+EXCEPTION
+    WHEN undefined_object THEN null;
+END $$;
 
-INSERT INTO cooking_methods (name) VALUES
-    ('steam'),
-    ('sautee'),
-    ('grill'),
-    ('broil'),
-    ('fry'),
-    ('boil'),
-    ('sous_vide'),
-    ('poach'),
-    ('simmer'),
-    ('braise'),
-    ('stew')
-ON CONFLICT (name) DO NOTHING;
+DO $$ BEGIN
+    DROP TYPE IF EXISTS difficulty_enum CASCADE;
+EXCEPTION
+    WHEN undefined_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    DROP TYPE IF EXISTS nutrition_content_enum CASCADE;
+EXCEPTION
+    WHEN undefined_object THEN null;
+END $$;
 """
 
 # --------------------------------------------------
 # Indexes
 # --------------------------------------------------
 CREATE_INDEXES_SQL = """
-CREATE INDEX IF NOT EXISTS idx_recipes_cuisine_id ON recipes(cuisine_id);
-CREATE INDEX IF NOT EXISTS idx_recipes_meal_type_id ON recipes(meal_type_id);
+CREATE INDEX IF NOT EXISTS idx_recipes_cuisine ON recipes(cuisine);
+CREATE INDEX IF NOT EXISTS idx_recipes_cooking_method_gin ON recipes USING GIN (cooking_method);
+CREATE INDEX IF NOT EXISTS idx_recipes_difficulty ON recipes(difficulty);
+CREATE INDEX IF NOT EXISTS idx_recipes_protein_content ON recipes(protein_content);
+CREATE INDEX IF NOT EXISTS idx_recipes_fiber_content ON recipes(fiber_content);
+CREATE INDEX IF NOT EXISTS idx_recipes_fat_content ON recipes(fat_content);
+CREATE INDEX IF NOT EXISTS idx_recipes_carbohydrate_content ON recipes(carbohydrate_content);
+CREATE INDEX IF NOT EXISTS idx_recipes_sodium_content ON recipes(sodium_content);
 CREATE INDEX IF NOT EXISTS idx_recipes_s3_key ON recipes(s3_key);
-CREATE INDEX IF NOT EXISTS idx_recipe_dietary_tags_recipe_id ON recipe_dietary_tags(recipe_id);
-CREATE INDEX IF NOT EXISTS idx_recipe_cooking_methods_recipe_id ON recipe_cooking_methods(recipe_id);
-CREATE INDEX IF NOT EXISTS idx_recipe_allergens_recipe_id ON recipe_allergens(recipe_id);
-CREATE INDEX IF NOT EXISTS idx_user_allergens_user_id ON user_allergens(user_id);
 """
 
 def run_sql(cursor, sql, label):
@@ -218,9 +159,9 @@ def create_schema():
         conn.autocommit = True
         cursor = conn.cursor()
 
+        run_sql(cursor, DROP_SQL, "drop existing schema")
         run_sql(cursor, CREATE_TYPES_SQL, "create enum types")
         run_sql(cursor, CREATE_TABLES_SQL, "create tables")
-        run_sql(cursor, SEED_LOOKUPS_SQL, "seed lookup tables")
         run_sql(cursor, CREATE_INDEXES_SQL, "create indexes")
 
         print("Schema created successfully.")
