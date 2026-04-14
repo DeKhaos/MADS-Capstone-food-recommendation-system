@@ -37,10 +37,12 @@ from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
 from project_package.data_preprocessing.default import (
-    USER,ITEM,RATING_COL,
+    USER,ITEM,RATING_COL,TIME_COL,
     ITEM_CAT_FEATURES,USER_CAT_FEATURES,EXPLODE_ITEM_FEATURES,EXPLODE_USER_FEATURES,
+    ITEM_ALL_FEATURES,
     USER_ML,ITEM_ML,RATING_ML_COL,
-    ML_ITEM_CAT_FEATURES,ML_USER_CAT_FEATURES,EXPLODE_ML_ITEM_FEATURES,EXPLODE_ML_USER_FEATURES
+    ML_ITEM_CAT_FEATURES,ML_USER_CAT_FEATURES,EXPLODE_ML_ITEM_FEATURES,EXPLODE_ML_USER_FEATURES,
+    ML_ITEM_ALL_FEATURES
 )
 
 load_dotenv()  # load variable from .env file
@@ -186,7 +188,8 @@ def construct_rec_train_dataset(
     user_reviews: pd.DataFrame,
     item_metadata: pd.DataFrame = None,
     user_preferences: pd.DataFrame = None,
-    use_test_cols: bool = False
+    use_test_cols: bool = False,
+    use_datetime: bool = False
 ):
     """
     Construct Rectools formatted dataset to train the recommendation models.
@@ -206,6 +209,9 @@ def construct_rec_train_dataset(
     use_test_cols: bool
         If True, use the MovieLens column mapping for testing.
 
+    use_datetime: bool
+        If True, use datetime column.
+
     Returns
     ----------
     metrics: Dataset
@@ -216,6 +222,7 @@ def construct_rec_train_dataset(
         in_itemCol = ITEM_ML
         in_userCol = USER_ML
         in_ratingCol = RATING_ML_COL
+        item_all = ML_ITEM_ALL_FEATURES
         item_cats = ML_ITEM_CAT_FEATURES
         user_cats = ML_USER_CAT_FEATURES
         explode_item_cats = EXPLODE_ML_ITEM_FEATURES
@@ -225,19 +232,28 @@ def construct_rec_train_dataset(
         in_itemCol = ITEM
         in_userCol = USER
         in_ratingCol = RATING_COL
+        in_datetime = TIME_COL
+        item_all = ITEM_ALL_FEATURES
         item_cats = ITEM_CAT_FEATURES
         user_cats = USER_CAT_FEATURES
         explode_item_cats = EXPLODE_ITEM_FEATURES
         explode_user_cats = EXPLODE_USER_FEATURES
 
     # rename features to match requirement in Rectools
-    interactions = user_reviews.rename(columns = {
-        in_userCol:"user_id",
-        in_itemCol:"item_id", 
-        in_ratingCol:"weight"
-    })
-    interactions['datetime'] = -1 # assign a random value as we won't use this
-
+    if not use_datetime:
+        interactions = user_reviews.rename(columns = {
+            in_userCol:"user_id",
+            in_itemCol:"item_id", 
+            in_ratingCol:"weight"
+        })
+        interactions['datetime'] = -1 # assign a random value as we won't use this
+    else:
+        interactions = user_reviews.rename(columns = {
+            in_userCol:"user_id",
+            in_itemCol:"item_id", 
+            in_ratingCol:"weight",
+            in_datetime:"datetime"
+        })
     if user_preferences is not None:
         user_features = user_preferences.rename(columns={
             in_userCol:"user_id"
@@ -257,10 +273,10 @@ def construct_rec_train_dataset(
             in_itemCol:"item_id"
         })
         # convert category features to long format
-        item_features = item_features[["item_id"] + item_cats]
+        item_features = item_features[["item_id"] + item_all]
         for feature in explode_item_cats:
             item_features = item_features.explode(feature)
-        item_features = pd.melt(item_features, id_vars='item_id', value_vars=item_cats,var_name="feature")
+        item_features = pd.melt(item_features, id_vars='item_id', value_vars=item_all,var_name="feature")
         item_features.rename(columns={"item_id":"id"},inplace=True)
     else:
         item_features = None
@@ -675,6 +691,7 @@ def recommendation_doc_id_pipeline(
     vectorstore: Chroma,
     rank_model: Ranker,
     query: str,
+    filters: dict = None,
     dataset: Dataset = None,
     user_profile: str = None,
     user_vectorstore: Chroma = None,
@@ -714,6 +731,9 @@ def recommendation_doc_id_pipeline(
 
     query: str
         The query to search for recommendation.
+    
+    filters: dict
+        Filter conditions when retrieving data from vectorstore.
 
     dataset: Dataset
         The Rectools format dataset to use as model input.
@@ -840,7 +860,7 @@ def recommendation_doc_id_pipeline(
                 query_array -= weight*bias_array  # remove bias weight to query
 
         
-        retrieved_items = vectorstore.similarity_search_by_vector(query_array,k=candidate)
+        retrieved_items = vectorstore.similarity_search_by_vector(query_array,k=candidate,filter=filters)
         candidate_ids = np.array([item.id for item in retrieved_items],dtype=int)
         result_docs = [item.page_content for item in retrieved_items]
 
@@ -978,3 +998,65 @@ def recommendation_doc_id_pipeline(
             doc_id_df = pd.concat((rec_df,rank_df)).reset_index(drop=True)
 
     return doc_id_df,score_df
+
+def generate_feature_constraint(
+    recipe_df: pd.DataFrame,
+    ingredient_root_dir:Union[Path,str]
+):
+    """
+    Helper function to generatate UI filter component constraints.
+
+    Parameters
+    ----------
+
+    recipe_df: pd.DataFrame
+        The recipe metadata dataset to process.
+
+    ingredient_root_dir: Union[Path,str]
+        Path to the file storing the unique ingredient names.
+
+    Returns
+    ----------
+    constraint_df: pd.DataFrame
+        The DataFrame with constraints created.
+    """
+
+    numeric_features = ['calories','prep_time','cook_time','total_time','who_score','fsa_score']
+    cat_features = [
+        'cuisine','difficulty',
+        'protein_content','fiber_content','fat_content','carbohydrate_content',
+        'sodium_content'
+    ]
+
+    # Feature that have its value as list, need to explode into record for counting
+    explode_cat_features = [
+        'cooking_method'
+    ]
+
+    ingredients_canonical = pd.read_csv(ingredient_root_dir)
+
+    feature_dict = {'feature':[],'value':[],'type':[]}
+
+    for col in numeric_features:
+        feature_dict['feature'].append(col)
+        feature_dict['value'].append([recipe_df[col].min(),recipe_df[col].max()])
+        feature_dict['type'].append('numeric')
+
+    for col in cat_features:
+        feature_dict['feature'].append(col)
+        feature_dict['value'].append(sorted(recipe_df[col].unique().tolist()))
+        feature_dict['type'].append('category')
+
+    for col in explode_cat_features:
+        explode_sery = recipe_df[col].explode(col)
+        feature_dict['feature'].append(col)
+        feature_dict['value'].append(sorted(explode_sery.unique().tolist()))
+        feature_dict['type'].append('category')
+
+    feature_dict['feature'].append('ingredients')
+    feature_dict['value'].append(sorted(ingredients_canonical['Ingredient'].unique().tolist()))
+    feature_dict['type'].append('category')
+
+    constraint_df = pd.DataFrame(feature_dict)
+    
+    return constraint_df
