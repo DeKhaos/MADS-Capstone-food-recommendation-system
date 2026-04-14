@@ -156,7 +156,8 @@ def chroma_filter_operator(
             operator_type = [<chain_operator1>,<chain_operator2>,...]
         )
 
-        Example for chain operator: 
+        Example for chain operator:
+        
             If the record value is string, use $in or $nin. 
             If the record value is number then use $in or $nin, $range should be used if the filter is a range slider.
             If the record value is a list of labels, use chain operator with iether $or or $and follow by ':' then
