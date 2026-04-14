@@ -1,14 +1,13 @@
 """
 Utility module that can be used to support other modules.
 """
-import re
+import os
 import glob
 
 import pandas as pd
 import numpy as np
 import dask.dataframe as dd
 from sklearn import datasets
-from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 
 def require_batching(
@@ -69,14 +68,15 @@ def save_dataframe_old(
 def read_data(
     file_name: str,
     directory: str ='datasets/raw',
-    convert_pandas: bool = True
+    convert_pandas: bool = True,
+    **kwargs
 ):
     path = directory + '/' + file_name + '*.csv'
     files = glob.glob(path)
 
     n = len(files)
     if n > 1:  # a dask directory with multiple csv
-        dask_df = dd.read_csv(path)
+        dask_df = dd.read_csv(path, assume_missing=True,**kwargs)
         # convert to pandas df
         if convert_pandas:
             pd_df = dask_df.compute().reset_index(drop=True)
@@ -84,7 +84,7 @@ def read_data(
         else:
             return dask_df
     elif n == 1:  # a csv file
-        pd_df = pd.read_csv(files[0])
+        pd_df = pd.read_csv(files[0],**kwargs)
         return pd_df
     else:
         raise Exception('No file found.')
@@ -165,3 +165,22 @@ def generate_data(
                 random_state=seed
                 )
         return X_train, X_test, y_train, y_test
+
+
+
+def load_chunks(
+        folder_path: str,
+        file_syntax: str,
+        usecols: list
+    ):
+    """combine chunks of csv file with same name syntax."""
+
+    # Find all files matching file_syntax
+    files = glob.glob(os.path.join(folder_path, file_syntax))
+    files = sorted(files)
+    
+    # Load and concatenate
+    df_list = [pd.read_csv(f,usecols=usecols) for f in files]
+    combined_df = pd.concat(df_list, ignore_index=True)
+    
+    return combined_df
