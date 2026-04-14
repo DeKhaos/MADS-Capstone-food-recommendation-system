@@ -2,6 +2,7 @@ from tqdm.auto import tqdm
 from typing import Union
 
 import pandas as pd
+import numpy as np
 from sklearn.utils import gen_batches
 from sklearn.preprocessing import MinMaxScaler,StandardScaler,OneHotEncoder,MultiLabelBinarizer
 
@@ -94,17 +95,25 @@ def create_user_preference(
             if cat_type == "single":
                 encoder = OneHotEncoder(sparse_output=False)
                 encoder.fit(buffer_df[[category]])
+                dummy_cols = np.array([str(c) for c in encoder.categories_[0]])  # To convert any False,True to string
+                encoded = pd.DataFrame(
+                    encoder.transform(buffer_df[[category]]),
+                    columns=dummy_cols,
+                    index=buffer_df.index
+                )
 
-                dummy_cols = encoder.categories_[0]
-                buffer_df[dummy_cols] = encoder.transform(buffer_df[[category]])
                 
             else:
                 encoder = MultiLabelBinarizer()
                 encoder.fit(buffer_df[category])
+                dummy_cols = np.array([str(c) for c in encoder.classes_])  # To convert any False,True to string
+                encoded = pd.DataFrame(
+                    encoder.transform(buffer_df[category]),
+                    columns=dummy_cols,
+                    index=buffer_df.index
+                )
+            buffer_df = pd.concat([buffer_df, encoded], axis=1)
 
-                dummy_cols = encoder.classes_
-                buffer_df[dummy_cols] = encoder.transform(buffer_df[category])
-            
             # we multiply the encoded labels with normalized ratings to get its preference weight
             buffer_df[dummy_cols] = buffer_df[dummy_cols].mul(buffer_df[f'normalized_{rating_col}'],axis=0)
             # we calculate the mean of each label across all reviews of each user, we can change how we handle the average
@@ -147,7 +156,8 @@ def chroma_filter_operator(
             operator_type = [<chain_operator1>,<chain_operator2>,...]
         )
 
-        Example for chain operator: 
+        Example for chain operator:
+        
             If the record value is string, use $in or $nin. 
             If the record value is number then use $in or $nin, $range should be used if the filter is a range slider.
             If the record value is a list of labels, use chain operator with iether $or or $and follow by ':' then
