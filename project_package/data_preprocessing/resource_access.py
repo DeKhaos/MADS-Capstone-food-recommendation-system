@@ -1,14 +1,15 @@
 """
 This module hold all format function necessary to run the application and the modelling.
 """
-import os,ast
+import os
+import ast
+import glob
 from pathlib import Path
 from typing import Union
 
 import pandas as pd
 from rectools.dataset import Dataset
 
-from ..data_collection.utility import load_chunks
 from ..aws.data_access import pandas_sql_df
 from ..data_preprocessing.utils import create_user_preference
 
@@ -21,6 +22,23 @@ from .default import (
     ML_ITEM_ALL_FEATURES,
     RECIPE_TO_USE,RECIPE_COLUMN_MAPPING,RECIPE_META_COLS,REVIEW_TO_USE,REVIEW_COLUMN_MAPPING
 )
+
+def load_chunks(
+        folder_path: str,
+        file_syntax: str,
+        usecols: list
+    ):
+    """combine chunks of csv file with same name syntax."""
+
+    # Find all files matching file_syntax
+    files = glob.glob(os.path.join(folder_path, file_syntax))
+    files = sorted(files)
+    
+    # Load and concatenate
+    df_list = [pd.read_csv(f,usecols=usecols) for f in files]
+    combined_df = pd.concat(df_list, ignore_index=True)
+    
+    return combined_df
 
 def load_recipe_data(
         root_directory: Union[Path,str],

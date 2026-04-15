@@ -165,22 +165,3 @@ def generate_data(
                 random_state=seed
                 )
         return X_train, X_test, y_train, y_test
-
-
-
-def load_chunks(
-        folder_path: str,
-        file_syntax: str,
-        usecols: list
-    ):
-    """combine chunks of csv file with same name syntax."""
-
-    # Find all files matching file_syntax
-    files = glob.glob(os.path.join(folder_path, file_syntax))
-    files = sorted(files)
-    
-    # Load and concatenate
-    df_list = [pd.read_csv(f,usecols=usecols) for f in files]
-    combined_df = pd.concat(df_list, ignore_index=True)
-    
-    return combined_df
