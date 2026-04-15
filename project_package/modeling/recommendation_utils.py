@@ -36,14 +36,7 @@ from flashrank import Ranker
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
-from project_package.data_preprocessing.default import (
-    USER,ITEM,RATING_COL,TIME_COL,
-    ITEM_CAT_FEATURES,USER_CAT_FEATURES,EXPLODE_ITEM_FEATURES,EXPLODE_USER_FEATURES,
-    ITEM_ALL_FEATURES,
-    USER_ML,ITEM_ML,RATING_ML_COL,
-    ML_ITEM_CAT_FEATURES,ML_USER_CAT_FEATURES,EXPLODE_ML_ITEM_FEATURES,EXPLODE_ML_USER_FEATURES,
-    ML_ITEM_ALL_FEATURES
-)
+from ..data_preprocessing.default import ITEM,ITEM_ML
 
 load_dotenv()  # load variable from .env file
 
@@ -188,115 +181,6 @@ def generate_metric_objs(
     }
 
     return metrics
-
-def construct_rec_train_dataset(
-    user_reviews: pd.DataFrame,
-    item_metadata: pd.DataFrame = None,
-    user_preferences: pd.DataFrame = None,
-    use_test_cols: bool = False,
-    use_datetime: bool = False
-):
-    """
-    Construct Rectools formatted dataset to train the recommendation models.
-
-    Parameters
-    ----------
-
-    user_reviews: pd.DataFrame
-        Contain user ratings for the items.
-
-    item_metadata: pd.DataFrame
-        Contains features of items.
-
-    user_preferences: pd.DataFrame
-        Contain user preferences for the items
-
-    use_test_cols: bool
-        If True, use the MovieLens column mapping for testing.
-
-    use_datetime: bool
-        If True, use datetime column.
-
-    Returns
-    ----------
-    metrics: Dataset
-        Rectools dataset object.
-    """
-    
-    if use_test_cols:  # use MovieLens test data settings
-        in_itemCol = ITEM_ML
-        in_userCol = USER_ML
-        in_ratingCol = RATING_ML_COL
-        item_all = ML_ITEM_ALL_FEATURES
-        item_cats = ML_ITEM_CAT_FEATURES
-        user_cats = ML_USER_CAT_FEATURES
-        explode_item_cats = EXPLODE_ML_ITEM_FEATURES
-        explode_user_cats = EXPLODE_ML_USER_FEATURES
-        
-    else:
-        in_itemCol = ITEM
-        in_userCol = USER
-        in_ratingCol = RATING_COL
-        in_datetime = TIME_COL
-        item_all = ITEM_ALL_FEATURES
-        item_cats = ITEM_CAT_FEATURES
-        user_cats = USER_CAT_FEATURES
-        explode_item_cats = EXPLODE_ITEM_FEATURES
-        explode_user_cats = EXPLODE_USER_FEATURES
-
-    # rename features to match requirement in Rectools
-    if not use_datetime:
-        interactions = user_reviews.rename(columns = {
-            in_userCol:"user_id",
-            in_itemCol:"item_id", 
-            in_ratingCol:"weight"
-        })
-        interactions['datetime'] = -1 # assign a random value as we won't use this
-    else:
-        interactions = user_reviews.rename(columns = {
-            in_userCol:"user_id",
-            in_itemCol:"item_id", 
-            in_ratingCol:"weight",
-            in_datetime:"datetime"
-        })
-    if user_preferences is not None:
-        user_features = user_preferences.rename(columns={
-            in_userCol:"user_id"
-        })
-        # convert category features to long format
-        user_features = user_features[["user_id"] + user_cats]
-        for feature in explode_user_cats:
-            user_features = user_features.explode(feature)
-        user_features = pd.melt(user_features, id_vars='user_id', value_vars=user_cats,var_name="feature")
-        user_features.rename(columns={"user_id":"id"},inplace=True)
-    else:
-        user_features = None
-        user_cats = ()
-
-    if item_metadata is not None:
-        item_features = item_metadata.rename(columns={
-            in_itemCol:"item_id"
-        })
-        # convert category features to long format
-        item_features = item_features[["item_id"] + item_all]
-        for feature in explode_item_cats:
-            item_features = item_features.explode(feature)
-        item_features = pd.melt(item_features, id_vars='item_id', value_vars=item_all,var_name="feature")
-        item_features.rename(columns={"item_id":"id"},inplace=True)
-    else:
-        item_features = None
-        item_cats = ()
-
-    # create Rectools dataset with all user/item features and iteractions
-    dataset = Dataset.construct(
-        interactions_df=interactions,
-        user_features_df=user_features,
-        cat_user_features=user_cats,
-        item_features_df=item_features,
-        cat_item_features=item_cats,
-    )
-
-    return dataset
 
 def doc_template_fill_in(
     doc_template: str,
