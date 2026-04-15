@@ -1,9 +1,16 @@
+import os
+from pathlib import Path
+import ast
+
 import dash_mantine_components as dmc
 import dash_bootstrap_components as dbc
 from dash import html, Output, Input, State, callback, ctx, dcc
 from dash_iconify import DashIconify
 import dash
 import numpy as np
+import pandas as pd
+
+root_directory = Path(os.getcwd())
 
 def create_login_modal(login_id: str):
     """
@@ -164,51 +171,52 @@ def create_login_modal(login_id: str):
                 color="primary",
                 size="sm",
             ),
-            dbc.Button(
-                "Log out", id=f"{login_id}_logout", outline=True, color="primary", size="sm"
-            ),
+            #NOTE: uncomment to turn on login logic again
+            # dbc.Button(
+            #     "Log out", id=f"{login_id}_logout", outline=True, color="primary", size="sm"
+            # ),
         ],
         gap="xs",
     )
 
     login_components = html.Div(
-        [
-            dbc.Collapse(login_button, id=f"{login_id}_scheme_collapse", is_open=True),
-            dbc.Collapse(user_profile, id=f"{login_id}_avatar_collapse", is_open=False),
+        [   #NOTE: uncomment to turn on login logic again
+            # dbc.Collapse(login_button, id=f"{login_id}_scheme_collapse", is_open=True),
+            dbc.Collapse(user_profile, id=f"{login_id}_avatar_collapse", is_open=True),
         ]
     )
+    #NOTE: uncomment to turn on login logic again
+    # @callback(
+    #     Output(f"{login_id}_scheme_collapse", "is_open"),
+    #     Output(f"{login_id}_avatar_collapse", "is_open"),
+    #     Output(f"{login_id}_avatar", "children"),
+    #     Output(f"{login_id}_store", "data", allow_duplicate=True),
+    #     Input(f"{login_id}_store", "data"),
+    #     Input(f"{login_id}_logout", "n_clicks"),
+    #     prevent_initial_call=True,
+    # )
+    # def switch_login_status(store_data, _):
+    #     """
+    #     Replace login button with user profile, if logged in.
+    #     """
 
-    @callback(
-        Output(f"{login_id}_scheme_collapse", "is_open"),
-        Output(f"{login_id}_avatar_collapse", "is_open"),
-        Output(f"{login_id}_avatar", "children"),
-        Output(f"{login_id}_store", "data", allow_duplicate=True),
-        Input(f"{login_id}_store", "data"),
-        Input(f"{login_id}_logout", "n_clicks"),
-        prevent_initial_call=True,
-    )
-    def switch_login_status(store_data, _):
-        """
-        Replace login button with user profile, if logged in.
-        """
+    #     login_open = dash.no_update
+    #     avatar_open = dash.no_update
+    #     update_avatar = dash.no_update
+    #     update_data = dash.no_update
 
-        login_open = dash.no_update
-        avatar_open = dash.no_update
-        update_avatar = dash.no_update
-        update_data = dash.no_update
+    #     if ctx.triggered_id == f"{login_id}_store" and store_data != {}:
+    #         update_avatar = store_data["badge"]
+    #         login_open = False
+    #         avatar_open = True
 
-        if ctx.triggered_id == f"{login_id}_store" and store_data != {}:
-            update_avatar = store_data["badge"]
-            login_open = False
-            avatar_open = True
+    #     elif ctx.triggered_id == f"{login_id}_logout":
+    #         update_avatar = ""
+    #         login_open = True
+    #         avatar_open = False
+    #         update_data = {}
 
-        elif ctx.triggered_id == f"{login_id}_logout":
-            update_avatar = ""
-            login_open = True
-            avatar_open = False
-            update_data = {}
-
-        return login_open, avatar_open, update_avatar, update_data
+    #     return login_open, avatar_open, update_avatar, update_data
 
     return login_modal, login_components, info_store
 
@@ -233,27 +241,41 @@ def user_profile_modal(login_id):
     profile_store: dcc.Store
         Session profile information storage.
     """
-
+    
+    
     # PLACEHOLDER: There should be a logic, function to retrieve all categorical options from database
-    cuisine_list = ["italian", "chinese", "india", "japanese", "mexican", "thai"]
-    dietary_list = ["vegan", "keto", "halal", "low-carb", "gluten-free"]
-    taste_list = ["sweet", "sour", "salty", "bitter", "umami/savory"]
-    allergen_list = [
-        "celery",
-        "gluten",
-        "crustaceans",
-        "eggs",
-        "fish",
-        "lupin",
-        "milk",
-        "molluscs",
-        "mustard",
-        "nuts",
-        "peanuts",
-        "sesame seeds",
-        "sulphur dioxide",
-        "soya",
-    ]
+    
+    constraint_df = pd.read_csv(root_directory / 'data/processed/ui_feature_constraints.csv')
+    constraint_df['value'] = constraint_df['value'].apply(ast.literal_eval)
+    
+    cuisine_list = constraint_df.loc[constraint_df['feature']=='cuisine','value'].tolist()[0]
+    cooking_method_list = constraint_df.loc[constraint_df['feature']=='cooking_method','value'].tolist()[0]
+    difficulty_list = constraint_df.loc[constraint_df['feature']=='difficulty','value'].tolist()[0]
+    protein_content_list = constraint_df.loc[constraint_df['feature']=='protein_content','value'].tolist()[0]
+    fiber_content_list = constraint_df.loc[constraint_df['feature']=='fiber_content','value'].tolist()[0]
+    fat_content_list = constraint_df.loc[constraint_df['feature']=='fat_content','value'].tolist()[0]
+    carbohydrate_content_list = constraint_df.loc[constraint_df['feature']=='carbohydrate_content','value'].tolist()[0]
+    sodium_content_list = constraint_df.loc[constraint_df['feature']=='sodium_content','value'].tolist()[0]
+
+    # cuisine_list = ["italian", "chinese", "india", "japanese", "mexican", "thai"]
+    # dietary_list = ["vegan", "keto", "halal", "low-carb", "gluten-free"]
+    # taste_list = ["sweet", "sour", "salty", "bitter", "umami/savory"]
+    # allergen_list = [
+    #     "celery",
+    #     "gluten",
+    #     "crustaceans",
+    #     "eggs",
+    #     "fish",
+    #     "lupin",
+    #     "milk",
+    #     "molluscs",
+    #     "mustard",
+    #     "nuts",
+    #     "peanuts",
+    #     "sesame seeds",
+    #     "sulphur dioxide",
+    #     "soya",
+    # ]
     ######
 
     option_stacks = html.Div(
@@ -261,16 +283,26 @@ def user_profile_modal(login_id):
             dmc.Text("Select your favorite cuisine"),
             dcc.Dropdown(cuisine_list, id=f"{login_id}_cuisine_select", multi=True, maxHeight=300),
             html.Br(),
-            dmc.Text("Preferred dietary"),
-            dcc.Dropdown(dietary_list, id=f"{login_id}_diet_select", multi=True, maxHeight=300),
+            dmc.Text("Preferred cooking method"),
+            dcc.Dropdown(cooking_method_list, id=f"{login_id}_cooking_method_select", multi=True, maxHeight=300),
             html.Br(),
-            dmc.Text("Preferred tastes"),
-            dcc.Dropdown(taste_list, id=f"{login_id}_taste_select", multi=True, maxHeight=300),
+            dmc.Text("Preferred difficulty"),
+            dcc.Dropdown(difficulty_list, id=f"{login_id}_difficulty_select", multi=True, maxHeight=300),
             html.Br(),
-            dmc.Text("Allergens"),
-            dcc.Dropdown(
-                allergen_list, id=f"{login_id}_allergen_select", multi=True, maxHeight=300
-            ),
+            dmc.Text("Preferred protein content"),
+            dcc.Dropdown(protein_content_list, id=f"{login_id}_protein_select", multi=True, maxHeight=300),
+            html.Br(),
+            dmc.Text("Preferred fiber content"),
+            dcc.Dropdown(fiber_content_list, id=f"{login_id}_fiber_select", multi=True, maxHeight=300),
+            html.Br(),
+            dmc.Text("Preferred fat content"),
+            dcc.Dropdown(fat_content_list, id=f"{login_id}_fat_select", multi=True, maxHeight=300),
+            html.Br(),
+            dmc.Text("Preferred carbonhydrate content"),
+            dcc.Dropdown(carbohydrate_content_list, id=f"{login_id}_carbonhydrate_select", multi=True, maxHeight=300),
+            html.Br(),
+            dmc.Text("Preferred sodium content"),
+            dcc.Dropdown(sodium_content_list, id=f"{login_id}_sodium_select", multi=True, maxHeight=300),
         ],
         className="dbc",  # use this to update dcc components css style
     )
@@ -303,9 +335,13 @@ def user_profile_modal(login_id):
     @callback(
         output = dict(
             output_cuisine = Output(f"{login_id}_cuisine_select","value"),
-            output_diet = Output(f"{login_id}_diet_select","value"),
-            output_taste = Output(f"{login_id}_taste_select","value"),
-            output_allergen = Output(f"{login_id}_allergen_select","value")
+            output_cooking_method = Output(f"{login_id}_cooking_method_select","value"),
+            output_difficulty = Output(f"{login_id}_difficulty_select","value"),
+            output_protein = Output(f"{login_id}_protein_select","value"),
+            output_fiber = Output(f"{login_id}_fiber_select","value"),
+            output_fat = Output(f"{login_id}_fat_select","value"),
+            output_carbohydrate = Output(f"{login_id}_carbonhydrate_select","value"),
+            output_sodium = Output(f"{login_id}_sodium_select","value")
         ),
         inputs = [Input(f"{login_id}_store", "data")],
         state = [State(f"{login_id}_profile_store","data")],
@@ -319,61 +355,84 @@ def user_profile_modal(login_id):
         if login_store_status != {} and (login_store_status is not None):
             if initial_state == {} or (not all(initial_state.values())):  # handle login/logout state
 
-                #PLACEHOLDER: Load initial preferences from database
-                initial_cuisine = np.random.choice(
-                    cuisine_list,size=np.random.randint(0,1+len(cuisine_list)),
-                    replace=False).tolist()
-                initial_diet = np.random.choice(
-                    dietary_list,size=np.random.randint(0,1+len(dietary_list)),
-                    replace=False).tolist()
-                initial_taste = np.random.choice(
-                    taste_list,size=np.random.randint(0,1+len(taste_list)),
-                    replace=False).tolist()
-                initial_allergen = np.random.choice(
-                    allergen_list,size=np.random.randint(0,1+len(allergen_list)),
-                    replace=False).tolist()
+                #PLACEHOLDER: Load initial preferences from database if available
+                # initial_cuisine = np.random.choice(
+                #     cuisine_list,size=np.random.randint(0,1+len(cuisine_list)),
+                #     replace=False).tolist()
+                init_cuisine = []
+                init_cooking = []
+                init_difficulty = []
+                init_protein = []
+                init_fiber = []
+                init_fat = []
+                init_carbohydrate = []
+                init_sodium = []
+                
                 ######
 
                 return dict(
-                    output_cuisine = initial_cuisine,
-                    output_diet = initial_diet,
-                    output_taste = initial_taste,
-                    output_allergen = initial_allergen,
+                    output_cuisine = init_cuisine,
+                    output_cooking_method = init_cooking,
+                    output_difficulty = init_difficulty,
+                    output_protein = init_protein,
+                    output_fiber = init_fiber,
+                    output_fat = init_fat,
+                    output_carbohydrate = init_carbohydrate,
+                    output_sodium = init_sodium
                 )
             else:
                 return dict(
                     output_cuisine = dash.no_update,
-                    output_diet = dash.no_update,
-                    output_taste = dash.no_update,
-                    output_allergen = dash.no_update,
+                    output_cooking_method = dash.no_update,
+                    output_difficulty = dash.no_update,
+                    output_protein = dash.no_update,
+                    output_fiber = dash.no_update,
+                    output_fat = dash.no_update,
+                    output_carbohydrate = dash.no_update,
+                    output_sodium = dash.no_update
                 )
         else:
             return dict(
-                output_cuisine = None,
-                output_diet = None,
-                output_taste = None,
-                output_allergen = None
-            )
+                    output_cuisine = [],
+                    output_cooking_method = [],
+                    output_difficulty = [],
+                    output_protein = [],
+                    output_fiber = [],
+                    output_fat = [],
+                    output_carbohydrate = [],
+                    output_sodium = []
+                )
 
     @callback(
         Output(f"{login_id}_profile_store", "data"),
         inputs = dict(
             cuisine_select = Input(f"{login_id}_cuisine_select","value"),
-            diet_select = Input(f"{login_id}_diet_select","value"),
-            taste_select = Input(f"{login_id}_taste_select","value"),
-            allergen_select = Input(f"{login_id}_allergen_select","value")
+            cooking_method_select = Input(f"{login_id}_cooking_method_select","value"),
+            difficulty_select = Input(f"{login_id}_difficulty_select","value"),
+            protein_select = Input(f"{login_id}_protein_select","value"),
+            fiber_select = Input(f"{login_id}_fiber_select","value"),
+            fat_select = Input(f"{login_id}_fat_select","value"),
+            carbohydrate_select = Input(f"{login_id}_carbonhydrate_select","value"),
+            sodium_select = Input(f"{login_id}_sodium_select","value")
         ),
         prevent_initial_call = True
     )
-    def store_profile_preferences(cuisine_select,diet_select,taste_select,allergen_select):
+    def store_profile_preferences(
+        cuisine_select,cooking_method_select,difficulty_select,protein_select,
+        fiber_select,fat_select,carbohydrate_select,sodium_select
+        ):
         """
         Store current profile preferences for the session
         """
         output_dict = dict()
         output_dict["cuisine_select"] = cuisine_select
-        output_dict["diet_select"] = diet_select
-        output_dict["taste_select"] = taste_select
-        output_dict["allergen_select"] = allergen_select
+        output_dict["cooking_method_select"] = cooking_method_select
+        output_dict["difficulty_select"] = difficulty_select
+        output_dict["protein_select"] = protein_select
+        output_dict["fiber_select"] = fiber_select
+        output_dict["fat_select"] = fat_select
+        output_dict["carbohydrate_select"] = carbohydrate_select
+        output_dict["sodium_select"] = sodium_select
 
         return output_dict
 
