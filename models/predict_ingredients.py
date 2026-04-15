@@ -13,7 +13,7 @@ import argparse
 import torch
 import torch.nn as nn
 from torchvision import models, transforms
-from PIL import Image
+from PIL import Image # let me know if we need to change this
 
 
 # ── Config ────────────────────────────────────────────────────────────────────
