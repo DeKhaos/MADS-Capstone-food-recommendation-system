@@ -55,6 +55,11 @@ try:
 except:
     nltk.download('punkt_tab', download_dir=os.environ["NTLK_DATA_PATH"])
 
+try:
+    nltk.data.find('/corpora/stopwords')
+except:
+    nltk.download('stopwords', download_dir=os.environ["NTLK_DATA_PATH"])
+
 class PairwiseCosineDistanceCalculator(PairwiseDistanceCalculator):
     """
     Class for computing Cosine distance between pairs of items using dense embeddings.

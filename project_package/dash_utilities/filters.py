@@ -1,3 +1,6 @@
+import os,ast
+from pathlib import Path
+
 import dash
 from dash import html, Output, Input, State, ALL,MATCH, callback, ctx, dcc
 import dash_mantine_components as dmc
@@ -7,6 +10,8 @@ import numpy as np
 import json
 from .modals import recommendation_card,recipe_info_modal,recipe_statistic_modal
 from . dummy_data import generate_recipe_statistic
+
+root_directory = Path(os.getcwd())
 
 def shared_filters(trigger_id, store_id):
     """
@@ -31,112 +36,78 @@ def shared_filters(trigger_id, store_id):
         The component that store the info of the filters.
     """
     #PLACEHOLDER: There should be a logic, function to retrieve all categorical options from database
-    meal_types = [
-        "breakfast",
-        "lunch",
-        "dinner",
-        "supper",
-        "snack",
-        "afternoon tea",
-        "brunch",
-        "picnic",
-    ]
 
-    prepare_time = [30, 60, 90, 120]
-    prepare_marks = [str(item) for item in prepare_time]
-    prepare_marks[0] = "≤" + prepare_marks[0]
-    prepare_marks[-1] = "≥" + prepare_marks[-1]
-    prepare_marks = dict(zip(prepare_time, prepare_marks))
-
-    cooking_time = [15, 30, 60, 90]
-    cook_marks = [str(item) for item in cooking_time]
-    cook_marks[0] = "≤" + cook_marks[0]
-    cook_marks[-1] = "≥" + cook_marks[-1]
-    cook_marks = dict(zip(cooking_time, cook_marks))
-
-    like_ingredients = [
-        "fish",
-        "pork",
-        "beef",
-        "lamb",
-        "cucumber",
-        "cabbage",
-        "olive oil",
-        "tomato",
-        "potato",
-        "peanut",
-        "celery",
-    ]
-
-    dislike_ingredients = [
-        "fish",
-        "pork",
-        "beef",
-        "lamb",
-        "cucumber",
-        "cabbage",
-        "olive oil",
-        "tomato",
-        "potato",
-        "peanut",
-        "celery",
-    ]
-
-    skill_level = ["beginner", "intermediate", "advanced"]
-
-    cooking_method = [
-        "baking",
-        "grilling",
-        "roasting",
-        "sauteing",
-        "frying",
-        "broiling",
-        "sous vide",
-        "poaching",
-        "simmering",
-        "boiling",
-        "steaming",
-        "braising",
-        "stewing",
-    ]
-
-    calorie_range = [100, 400, 800, 1500, 2000]
+    constraint_df = pd.read_csv(root_directory / 'data/processed/ui_feature_constraints.csv')  # get constraint info from processed csv
+    constraint_df['value'] = constraint_df['value'].apply(ast.literal_eval)
+    
+    cuisine_list = constraint_df.loc[constraint_df['feature']=='cuisine','value'].tolist()[0]
+    cooking_method_list = constraint_df.loc[constraint_df['feature']=='cooking_method','value'].tolist()[0]
+    difficulty_list = constraint_df.loc[constraint_df['feature']=='difficulty','value'].tolist()[0]
+    like_ingredients = constraint_df.loc[constraint_df['feature']=='ingredients','value'].tolist()[0]
+    dislike_ingredients = constraint_df.loc[constraint_df['feature']=='ingredients','value'].tolist()[0]
+    
+    calorie_range = [100, 1000, 2000, 3000, 4000, 5000]
     calorie_marks = [str(item) for item in calorie_range]
     calorie_marks[0] = "≤" + calorie_marks[0]
     calorie_marks[-1] = "≥" + calorie_marks[-1]
     calorie_marks = dict(zip(calorie_range, calorie_marks))
 
-    macro_nutrients = {
-        "cholesterol": ([0, 100], "mg"),
-        "carbohydrates": ([10, 100], "g"),
-        "protein": ([10, 100], "g"),
-        "fat": ([10, 100], "g"),
-        "saturated_fats": ([10, 100], "g"),
-        "fiber": ([10, 100], "g"),
-        "sugar": ([10, 100], "g"),
-    }
+    prepare_time = [60, 120, 720, 1440]
+    prepare_marks = [str(item) for item in prepare_time]
+    prepare_marks[0] = "≤" + prepare_marks[0]
+    prepare_marks = dict(zip(prepare_time, prepare_marks))
 
-    micro_nutrients = {
-        "vitamins": {
-            "A": ([0, 100], "mg"),
-            "B1(thiamin)": ([0, 100], "mg"),
-            "B3 (niacin)": ([0, 100], "mg"),
-            "B6": ([0, 100], "mg"),
-            "C": ([0, 100], "mg"),
-        },
-        "minerals": {
-            "Sodium": ([0, 100], "mg"),
-            "Calcium": ([0, 100], "mg"),
-            "Copper": ([0, 100], "mg"),
-            "Iron": ([0, 100], "mg"),
-            "Magnesium": ([0, 100], "mg"),
-            "Potassium": ([0, 100], "mg"),
-        },
-    }
+    cooking_time = [60, 240, 1440, 4320]
+    cook_marks = [str(item) for item in cooking_time]
+    cook_marks[0] = "≤" + cook_marks[0]
+    cook_marks = dict(zip(cooking_time, cook_marks))
+
+    total_cook_time = [60, 240, 1440, 4320]
+    total_cook_marks = [str(item) for item in total_cook_time]
+    total_cook_marks[0] = "≤" + total_cook_marks[0]
+    total_cook_marks = dict(zip(total_cook_time, total_cook_marks))
+
+    who_score = constraint_df.loc[constraint_df['feature']=='who_score','value'].tolist()[0]
+    fsa_score = constraint_df.loc[constraint_df['feature']=='fsa_score','value'].tolist()[0]
+
+    protein_content_list = constraint_df.loc[constraint_df['feature']=='protein_content','value'].tolist()[0]
+    fiber_content_list = constraint_df.loc[constraint_df['feature']=='fiber_content','value'].tolist()[0]
+    fat_content_list = constraint_df.loc[constraint_df['feature']=='fat_content','value'].tolist()[0]
+    carbohydrate_content_list = constraint_df.loc[constraint_df['feature']=='carbohydrate_content','value'].tolist()[0]
+    sodium_content_list = constraint_df.loc[constraint_df['feature']=='sodium_content','value'].tolist()[0]
+
+    #PLACEHOLDER: uncomment to enable macro/micro nutrient
+    # macro_nutrients = {
+    #     "cholesterol": ([0, 100], "mg"),
+    #     "carbohydrates": ([10, 100], "g"),
+    #     "protein": ([10, 100], "g"),
+    #     "fat": ([10, 100], "g"),
+    #     "saturated_fats": ([10, 100], "g"),
+    #     "fiber": ([10, 100], "g"),
+    #     "sugar": ([10, 100], "g"),
+    # }
+
+    # micro_nutrients = {
+    #     "vitamins": {
+    #         "A": ([0, 100], "mg"),
+    #         "B1(thiamin)": ([0, 100], "mg"),
+    #         "B3 (niacin)": ([0, 100], "mg"),
+    #         "B6": ([0, 100], "mg"),
+    #         "C": ([0, 100], "mg"),
+    #     },
+    #     "minerals": {
+    #         "Sodium": ([0, 100], "mg"),
+    #         "Calcium": ([0, 100], "mg"),
+    #         "Copper": ([0, 100], "mg"),
+    #         "Iron": ([0, 100], "mg"),
+    #         "Magnesium": ([0, 100], "mg"),
+    #         "Potassium": ([0, 100], "mg"),
+    #     },
+    # }
     ######
 
     # lambda function for creating filter header
-    filter_header = lambda label,name,filter_type,exact="exact": dmc.Group(
+    filter_header = lambda label,name,filter_type,exact="exact",disable_priority=False: dmc.Group(
         [   
             dbc.Switch(id={"name": name,"type":"filter_control","filter":filter_type},value=False),
             dmc.Text(label, fw=500, size="lg"), 
@@ -144,7 +115,7 @@ def shared_filters(trigger_id, store_id):
                 dbc.RadioItems(
                     options=[
                         {"label": "Exact filter", "value": "exact"},
-                        {"label": "Priority filter", "value": "priority"},
+                        {"label": "Priority filter", "value": "priority",'disabled':disable_priority},
                     ],
                     value=exact,
                     id={"type": "exact_switch", "name": name,"filter":filter_type},
@@ -174,7 +145,7 @@ def shared_filters(trigger_id, store_id):
     ],justify="space-between",className="mb-2")
 
 
-    #NOTE: 3 type of filter: filter_checklist,filter_slider,filter_dropdown,
+    #NOTE: There are 3 type of filters: filter_checklist,filter_slider,filter_dropdown,
     
     filters = dbc.Card(
         html.Div(
@@ -185,47 +156,39 @@ def shared_filters(trigger_id, store_id):
                     className="my-1"
                 ),
 
-                filter_header("Meal type","meal_type","filter_checklist"),
+                filter_header("Cuisine","cuisine_type","filter_checklist"),
                 dbc.Collapse(
                     dbc.Checklist(
-                        options=[{"label": item, "value": item} for item in meal_types],
+                        options=[{"label": item, "value": item} for item in cuisine_list],
                         inline=True,
-                        id={"filter": "filter_checklist", "name": "meal_type"},
+                        id={"filter": "filter_checklist", "name": "cuisine_type"},
                     ),
                     is_open = False,
-                    id = {"name": "meal_type","type":"filter_control","filter":"filter_checklist","collapse":1}
+                    id = {"name": "cuisine_type","type":"filter_control","filter":"filter_checklist","collapse":1}
                 ),
                 html.Hr(),
 
-                filter_header("Preparation time (min)","prepare_time","filter_slider"),
+                filter_header("Cooking method","cook_method","filter_checklist"),
                 dbc.Collapse(
-                    dcc.RangeSlider(
-                        min(prepare_time),
-                        max(prepare_time),
-                        step=5,
-                        value=[min(cooking_time),max(prepare_time)],
-                        marks=prepare_marks,
-                        id={"filter": "filter_slider", "name": "prepare_time"},
-                        className="w-75",
+                    dbc.Checklist(
+                        options=[{"label": item, "value": item} for item in cooking_method_list],
+                        inline=True,
+                        id={"filter": "filter_checklist", "name": "cook_method"},
                     ),
                     is_open = False,
-                    id = {"name": "prepare_time","type":"filter_control","filter": "filter_slider","collapse":1}
+                    id = {"name": "cook_method","type":"filter_control","filter": "filter_checklist","collapse":1}
                 ),
                 html.Hr(),
 
-                filter_header("Cooking time (min)","cooking_time","filter_slider"),
+                filter_header("Difficulty level","difficulty_level","filter_checklist"),
                 dbc.Collapse(
-                    dcc.RangeSlider(
-                        min(cooking_time),
-                        max(cooking_time),
-                        step=5,
-                        value=[min(cooking_time),max(cooking_time)],
-                        marks=cook_marks,
-                        id={"filter": "filter_slider", "name": "cooking_time"},
-                        className="w-75",
+                    dbc.Checklist(
+                        options=[{"label": item, "value": item} for item in difficulty_list],
+                        inline=True,
+                        id={"filter": "filter_checklist", "name": "difficulty_level"},
                     ),
                     is_open = False,
-                    id = {"name": "cooking_time","type":"filter_control","filter": "filter_slider","collapse":1}
+                    id = {"name": "difficulty_level","type":"filter_control","filter": "filter_checklist","collapse":1}
                 ),
                 html.Hr(),
 
@@ -257,31 +220,7 @@ def shared_filters(trigger_id, store_id):
                 ),
                 html.Hr(),
 
-                filter_header("Skill level","skill_level","filter_checklist"),
-                dbc.Collapse(
-                    dbc.Checklist(
-                        options=[{"label": item, "value": item} for item in skill_level],
-                        inline=True,
-                        id={"filter": "filter_checklist", "name": "skill_level"},
-                    ),
-                    is_open = False,
-                    id = {"name": "skill_level","type":"filter_control","filter": "filter_checklist","collapse":1}
-                ),
-                html.Hr(),
-
-                filter_header("Cooking method","cook_method","filter_checklist"),
-                dbc.Collapse(
-                    dbc.Checklist(
-                        options=[{"label": item, "value": item} for item in cooking_method],
-                        inline=True,
-                        id={"filter": "filter_checklist", "name": "cook_method"},
-                    ),
-                    is_open = False,
-                    id = {"name": "cook_method","type":"filter_control","filter": "filter_checklist","collapse":1}
-                ),
-                html.Hr(),
-
-                filter_header("Calorie range (kcal)","calorie","filter_slider","priority"),
+                filter_header("Calorie range (kcal)","calorie","filter_slider",disable_priority=True),
                 dbc.Collapse(
                     dcc.RangeSlider(
                         min(calorie_range),
@@ -296,36 +235,176 @@ def shared_filters(trigger_id, store_id):
                 ),
                 html.Hr(),
 
-                filter_header("Macro-nutrients","macro_nutrient","filter_slider","priority"),
+                filter_header("Preparation time (min)","prepare_time","filter_slider",disable_priority=True),
                 dbc.Collapse(
-                    html.Div([
-                        create_slider('',info,'macro_nutrient') for info in macro_nutrients.items()
-                    ]),
+                    dcc.RangeSlider(
+                        min(prepare_time),
+                        max(prepare_time),
+                        step=5,
+                        value=[min(cooking_time),max(prepare_time)],
+                        marks=prepare_marks,
+                        id={"filter": "filter_slider", "name": "prepare_time"},
+                        className="w-75",
+                    ),
                     is_open = False,
-                    id = {"name": "macro_nutrient","type":"filter_control","filter": "filter_slider","collapse":1}
+                    id = {"name": "prepare_time","type":"filter_control","filter": "filter_slider","collapse":1}
                 ),
                 html.Hr(),
 
-                filter_header("Micro-nutrients: Vitamins","vitamin_nutrient","filter_slider","priority"),
+                filter_header("Cooking time (min)","cooking_time","filter_slider",disable_priority=True),
                 dbc.Collapse(
-                    html.Div([
-                        create_slider("Vitamin ",info,"vitamin_nutrient") 
-                        for info in micro_nutrients['vitamins'].items()
-                    ]),
+                    dcc.RangeSlider(
+                        min(cooking_time),
+                        max(cooking_time),
+                        step=5,
+                        value=[min(cooking_time),max(cooking_time)],
+                        marks=cook_marks,
+                        id={"filter": "filter_slider", "name": "cooking_time"},
+                        className="w-75",
+                    ),
                     is_open = False,
-                    id = {"name": "vitamin_nutrient","type":"filter_control","filter": "filter_slider","collapse":1}
+                    id = {"name": "cooking_time","type":"filter_control","filter": "filter_slider","collapse":1}
                 ),
                 html.Hr(),
 
-                filter_header("Micro-nutrients: Minerals","mineral_nutrient","filter_slider","priority"),
+                filter_header("Total time (min)","total_cook_time","filter_slider",disable_priority=True),
                 dbc.Collapse(
-                    html.Div([
-                        create_slider('',info,'mineral_nutrient') 
-                        for info in micro_nutrients["minerals"].items()
-                    ]),
+                    dcc.RangeSlider(
+                        min(total_cook_time),
+                        max(total_cook_time),
+                        step=5,
+                        value=[min(total_cook_time),max(total_cook_time)],
+                        marks=total_cook_marks,
+                        id={"filter": "filter_slider", "name": "total_cook_time"},
+                        className="w-75",
+                    ),
                     is_open = False,
-                    id = {"name": "mineral_nutrient","type":"filter_control","filter": "filter_slider","collapse":1}
-                )
+                    id = {"name": "total_cook_time","type":"filter_control","filter": "filter_slider","collapse":1}
+                ),
+                html.Hr(),
+                
+                filter_header("WHO health score","who_score","filter_slider",disable_priority=True),
+                dbc.Collapse(
+                    dcc.RangeSlider(
+                        min(who_score),
+                        max(who_score),
+                        step=1,
+                        value=[min(who_score),max(who_score)],
+                        id={"filter": "filter_slider", "name": "who_score"},
+                        className="w-75",
+                    ),
+                    is_open = False,
+                    id = {"name": "who_score","type":"filter_control","filter": "filter_slider","collapse":1}
+                ),
+                html.Hr(),
+
+                filter_header("FSA health score","fsa_score","filter_slider",disable_priority=True),
+                dbc.Collapse(
+                    dcc.RangeSlider(
+                        min(fsa_score),
+                        max(fsa_score),
+                        step=1,
+                        value=[min(fsa_score),max(fsa_score)],
+                        id={"filter": "filter_slider", "name": "fsa_score"},
+                        className="w-75",
+                    ),
+                    is_open = False,
+                    id = {"name": "fsa_score","type":"filter_control","filter": "filter_slider","collapse":1}
+                ),
+                html.Hr(),
+
+                filter_header("Protein content","protein_content","filter_checklist"),
+                dbc.Collapse(
+                    dbc.Checklist(
+                        options=[{"label": item, "value": item} for item in protein_content_list],
+                        inline=True,
+                        id={"filter": "filter_checklist", "name": "protein_content"},
+                    ),
+                    is_open = False,
+                    id = {"name": "protein_content","type":"filter_control","filter":"filter_checklist","collapse":1}
+                ),
+                html.Hr(),
+
+                filter_header("Protein content","fiber_content","filter_checklist"),
+                dbc.Collapse(
+                    dbc.Checklist(
+                        options=[{"label": item, "value": item} for item in fiber_content_list],
+                        inline=True,
+                        id={"filter": "filter_checklist", "name": "fiber_content"},
+                    ),
+                    is_open = False,
+                    id = {"name": "fiber_content","type":"filter_control","filter":"filter_checklist","collapse":1}
+                ),
+                html.Hr(),
+
+                filter_header("Fat content","fat_content","filter_checklist"),
+                dbc.Collapse(
+                    dbc.Checklist(
+                        options=[{"label": item, "value": item} for item in fat_content_list],
+                        inline=True,
+                        id={"filter": "filter_checklist", "name": "fat_content"},
+                    ),
+                    is_open = False,
+                    id = {"name": "fat_content","type":"filter_control","filter":"filter_checklist","collapse":1}
+                ),
+                html.Hr(),
+
+                filter_header("Carbohydrate content","cab_content","filter_checklist"),
+                dbc.Collapse(
+                    dbc.Checklist(
+                        options=[{"label": item, "value": item} for item in carbohydrate_content_list],
+                        inline=True,
+                        id={"filter": "filter_checklist", "name": "cab_content"},
+                    ),
+                    is_open = False,
+                    id = {"name": "cab_content","type":"filter_control","filter":"filter_checklist","collapse":1}
+                ),
+                html.Hr(),
+
+                filter_header("Sodium content","sodium_content","filter_checklist"),
+                dbc.Collapse(
+                    dbc.Checklist(
+                        options=[{"label": item, "value": item} for item in sodium_content_list],
+                        inline=True,
+                        id={"filter": "filter_checklist", "name": "sodium_content"},
+                    ),
+                    is_open = False,
+                    id = {"name": "sodium_content","type":"filter_control","filter":"filter_checklist","collapse":1}
+                ),
+                html.Hr(),
+
+                #PLACEHOLDER: uncomment to enable macro/micro nutrient
+                # html.Hr(),
+                # filter_header("Macro-nutrients","macro_nutrient","filter_slider","priority"),
+                # dbc.Collapse(
+                #     html.Div([
+                #         create_slider('',info,'macro_nutrient') for info in macro_nutrients.items()
+                #     ]),
+                #     is_open = False,
+                #     id = {"name": "macro_nutrient","type":"filter_control","filter": "filter_slider","collapse":1}
+                # ),
+                # html.Hr(),
+
+                # filter_header("Micro-nutrients: Vitamins","vitamin_nutrient","filter_slider","priority"),
+                # dbc.Collapse(
+                #     html.Div([
+                #         create_slider("Vitamin ",info,"vitamin_nutrient") 
+                #         for info in micro_nutrients['vitamins'].items()
+                #     ]),
+                #     is_open = False,
+                #     id = {"name": "vitamin_nutrient","type":"filter_control","filter": "filter_slider","collapse":1}
+                # ),
+                # html.Hr(),
+
+                # filter_header("Micro-nutrients: Minerals","mineral_nutrient","filter_slider","priority"),
+                # dbc.Collapse(
+                #     html.Div([
+                #         create_slider('',info,'mineral_nutrient') 
+                #         for info in micro_nutrients["minerals"].items()
+                #     ]),
+                #     is_open = False,
+                #     id = {"name": "mineral_nutrient","type":"filter_control","filter": "filter_slider","collapse":1}
+                # )
 
 
             ],
@@ -393,7 +472,7 @@ def shared_filters(trigger_id, store_id):
             checklists_df = pd.json_normalize(context_dict["checklists"])
             dropdowns_df = pd.json_normalize(context_dict["dropdowns"])
             sliders_df = pd.json_normalize(context_dict["sliders"])
-            sub_sliders_df = pd.json_normalize(context_dict["sub_sliders"])
+            # sub_sliders_df = pd.json_normalize(context_dict["sub_sliders"])  #PLACEHOLDER: uncomment to enable macro/micro nutrient
 
             switch_df = switch_df.loc[switch_df['value']==True]  #get only filter that turned on
             switch_df = pd.merge(
@@ -434,14 +513,14 @@ def shared_filters(trigger_id, store_id):
                     if check_df.shape[0] >0:
                         filter_df = pd.concat([filter_df,check_df])
 
-                    # nutrient slider
-                    check_df = pd.merge(
-                        switch_df[['id.filter','id.name','priority_type']],
-                        sub_sliders_df[['id.filter','id.name','id.sub_name','value']],
-                        how='inner',on=['id.filter','id.name']
-                    )
-                    if check_df.shape[0] >0:
-                        filter_df = pd.concat([filter_df,check_df])
+                    # nutrient slider  #PLACEHOLDER: uncomment to enable macro/micro nutrient
+                    # check_df = pd.merge(
+                    #     switch_df[['id.filter','id.name','priority_type']],
+                    #     sub_sliders_df[['id.filter','id.name','id.sub_name','value']],
+                    #     how='inner',on=['id.filter','id.name']
+                    # )
+                    # if check_df.shape[0] >0:
+                    #     filter_df = pd.concat([filter_df,check_df])
 
                 filter_df.rename(columns = {
                     "id.filter":"filter_type",
@@ -587,7 +666,9 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
         recommendation_data = {}
         #PLACEHOLDER: Logic to generate recommendation and its statistics from database in the server
         if filter_dict!={}:
-            # print(pd.DataFrame(filter_dict))
+            print(pd.DataFrame(filter_dict))
+            print('====')
+            print(profile_dict)
             recipe_statistics = generate_recipe_statistic(filter_dict,profile_dict,n_candidate)
 
             output_list = []  # Output top + bottom recommendation
