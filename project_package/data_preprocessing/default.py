@@ -119,6 +119,10 @@ PREFERENCE_COLS = [
     'sodium_content'
 ]
 
+USER_META_COLS = [
+ "user_id"
+]
+
 # DEFAULT FOR TESTING PURPOSE  --------------------------------------------------------------
 
 USER_ML = "userId"

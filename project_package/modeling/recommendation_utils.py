@@ -600,6 +600,7 @@ def recommendation_doc_id_pipeline(
     ranker_bias_weight: float = 0.35,
     weighted_rank_config: dict = None,
     toy_dataset: bool = False,
+    limit_user_ids: list = None,
     random_state: int = None
 ):
     """
@@ -688,6 +689,10 @@ def recommendation_doc_id_pipeline(
     toy_dataset: bool
         If True, using the toy dataset default key values.
 
+    limit_user_ids: list
+        Clarify the list of user ID so Chroma vectorstore will only return query results revolving
+        around these user ID, just in case for chunk test.
+        
     random_state: int
         Random seed for preproducibility.
             
@@ -761,6 +766,10 @@ def recommendation_doc_id_pipeline(
         candidate_df['pipeline_step'] = 'candidate'
 
     # Layer 2: recommendation
+
+    # limit result for chunk test
+    users_filter = {"user_id":{"$in":limit_user_ids}} if limit_user_ids is not None else None  
+
     if model_type =='item-content':
         tokenized_corpus = preprocessing_docs(result_docs)
         tokenized_query = preprocessing_docs(query)
@@ -774,7 +783,7 @@ def recommendation_doc_id_pipeline(
 
     elif model_type == 'collab':
         # Creating recommendation, collaboration is trained on entire dataset and it can only see items used in trained model
-        retrieved_users = user_vectorstore.similarity_search(user_profile,k=n_user)
+        retrieved_users = user_vectorstore.similarity_search(user_profile,k=n_user,filter=users_filter)
         match_user_ids = np.array([item.id for item in retrieved_users],dtype=int)
         
         model_recommendations = recommendation_model.recommend(
@@ -797,7 +806,7 @@ def recommendation_doc_id_pipeline(
 
     else: # hybrid
         # Creating recommendation, collaboration is trained on entire dataset and it can only see items used in trained model
-        retrieved_users = user_vectorstore.similarity_search(user_profile,k=n_user)
+        retrieved_users = user_vectorstore.similarity_search(user_profile,k=n_user,filter=users_filter)
         match_user_ids = np.array([item.id for item in retrieved_users],dtype=int)
 
         model_recommendations = recommendation_model.recommend(

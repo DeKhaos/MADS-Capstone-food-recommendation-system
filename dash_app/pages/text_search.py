@@ -10,10 +10,11 @@ dash.register_page(__name__, path="/text_search")
 layout = html.Div(
     [   dcc.Store(id={"page":"text_search","type":"input_store"},data={"recipe_name":"","recipe_description":""}),
         dmc.Text("Recipe name", fw=700,className="my-2"),
-        dbc.Input(type='text',size="lg", placeholder="Input the recipe name",id=f"{page_name}_recipe_name"),
+        dbc.Input(value='',id=f"{page_name}_recipe_name",type='text',size="lg", 
+                  placeholder="Input the recipe name",debounce=True),
         dmc.Text("Recipe description", fw=700,className="my-2"),
         dbc.Textarea(
-            id=f"{page_name}_recipe_descript",
+            value='',id=f"{page_name}_recipe_descript",debounce=True,
             size="lg", placeholder="Give a brief description of the recipe, cooking steps or requirements,etc.")
         ],
     className="m-2 dbc"
@@ -32,5 +33,5 @@ def store_text_inputs(recipe_name,_recipe_descript,recipe_store):
     """
     recipe_store["recipe_name"] = recipe_name
     recipe_store["recipe_description"] = _recipe_descript
-    print(recipe_store)
+    
     return recipe_store
