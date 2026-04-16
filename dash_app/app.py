@@ -1,3 +1,12 @@
+import os
+import certifi
+# Fix error when invoke 'project_package' from the Dash UI
+os.environ["SSL_CERT_FILE"] = certifi.where()
+os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
+import logging
+import ast
+logging.getLogger("httpx").setLevel(logging.WARNING)  # hide logging in cell when using chroma vectorstore
+
 import dash
 from dash import html, dcc
 from dash_bootstrap_templates import ThemeChangerAIO, template_from_url
@@ -41,6 +50,7 @@ footer = html.Small("© 2026 A MADS Capstone Project",className="text-center")
 
 app.layout = dmc.MantineProvider(
     dmc.AppShell([
+        dmc.NotificationContainer(id="notification-container"),
         dcc.Location(id="url",refresh="callback-nav"),
 
         dmc.Grid(
@@ -58,7 +68,7 @@ app.layout = dmc.MantineProvider(
 
         dbc.NavbarSimple(
             [
-                dbc.NavItem(dbc.NavLink("Recipe name search", href="/",active="exact")),
+                dbc.NavItem(dbc.NavLink("Recipe name search", href="/text_search",active="exact")),
                 dbc.NavItem(dbc.NavLink("Recipe instruction search", href="/description_search",active="exact")),
                 dbc.NavItem(dbc.NavLink("Recipe Image search", href="/image_search",active="exact"))
             ],
