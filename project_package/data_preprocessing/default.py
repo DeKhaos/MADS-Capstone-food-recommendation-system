@@ -94,6 +94,17 @@ Preferred Carbohydrate content is {}.
 Preferred Sodium content is {}.
 """
 
+USER_SEARCH_TEMPLATE = """
+Favorite cuisine are: {}.
+Preferred cooking method: {}.
+Preferred cooking difficulty: {}.
+Preferred Protein content is {}.
+Preferred Fiber content is {}.
+Preferred Fat content is {}.
+Preferred Carbohydrate content is {}.
+Preferred Sodium content is {}.
+"""
+
 RECIPE_COLS = [
     'recipe_name','instructions','ingredients','cuisine','cooking_method',
     'difficulty','protein_content','fiber_content','fat_content','carbohydrate_content',
@@ -122,6 +133,39 @@ PREFERENCE_COLS = [
 USER_META_COLS = [
  "user_id"
 ]
+
+#CHROMA vectorstore filter mapping --------------------------------------------------------------
+
+OPERATOR_MAPPING = dict(
+    cuisine = '$in',
+    cooking_method = '$or:$contains',
+    difficulty = '$in',
+    like_ingredient = '$or:$contains',
+    dislike_ingredient = '$and:$not_contains',
+    calories = '$range',
+    prep_time = '$range', 
+    cook_time = '$range', 
+    total_time = '$range',
+    who_score = '$range',
+    fsa_score = '$range',
+    protein_content = '$in',
+    fiber_content = '$in',
+    fat_content = '$in',
+    carbohydrate_content = '$in',
+    sodium_content = '$in'
+)
+
+TRAIT_MAPPING = dict(
+    cuisine_type = "Cuisine:{}",
+    cook_method = "Cooking method:{}",
+    difficulty_level = "The difficulty is {}.",
+    like_ingredient = "Ingredient list:\n{}",
+    protein_content = "Protein content is {}.",
+    fiber_content = "Fiber content is {}.",
+    fat_content = "Fat content is {}.",
+    cab_content = "Carbohydrate content is {}.",
+    sodium_content = "Sodium content is {}."
+)
 
 # DEFAULT FOR TESTING PURPOSE  --------------------------------------------------------------
 
