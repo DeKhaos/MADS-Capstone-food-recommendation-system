@@ -74,6 +74,7 @@ nbformat==5.10.4
 nest-asyncio==1.6.0
 nltk==3.9.4
 numpy==1.26.4
+onnxruntime==1.16.3  #onnxruntime 1.24.4
 packaging==25.0
 pandas==2.2.3
 parso==0.8.5
@@ -132,5 +133,5 @@ xxhash==3.6.0
 yarl==1.22.0
 zipp==3.23.0
 --extra-index-url https://download.pytorch.org/whl/cu126
-torch==2.10.0+cu126
+torch==2.8.0+cu126
 -e .
