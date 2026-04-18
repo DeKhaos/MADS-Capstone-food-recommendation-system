@@ -873,6 +873,8 @@ def recommendation_doc_id_pipeline(
         score_df = score_df.merge(data_df[[item_id,f_name]],on=item_id,how='left')
 
         score_df[f_name] = (score_df[f_name] - f_min)/(f_max-f_min)  # normalize the feature to [0,1]
+        if f_name == 'fsa_score':  # because slow FSA score mean healthier recipe
+            score_df[f_name] = 1 - score_df[f_name]
         score_df['relevance_score'] = ranker_weight*score_df['relevance_score'] + f_weight*score_df[f_name]  # recaculate the ranker score
         score_df = score_df[[item_id,'relevance_score','page_content']]
         score_df = score_df.sort_values('relevance_score',ascending=False).reset_index(drop=True)
