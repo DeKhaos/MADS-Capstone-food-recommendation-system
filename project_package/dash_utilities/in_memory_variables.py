@@ -35,7 +35,7 @@ full_data = os.environ.get('IN_MEMORY_DATA','full')
 embedding_model = get_embedding_model(
     huggingface_model_path="BAAI/bge-small-en-v1.5",
     local_model_name="bge-small",
-    device="cuda"
+    device=os.environ.get("DEVICE","cpu")
 )
 chroma_path = root_directory / "data/processed/chroma_db"
 
