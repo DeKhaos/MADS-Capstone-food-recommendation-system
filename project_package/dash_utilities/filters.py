@@ -8,8 +8,16 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 import numpy as np
 import json
+
 from .modals import recommendation_card,recipe_info_modal,recipe_statistic_modal
-from . dummy_data import generate_recipe_statistic
+from .dummy_data import generate_recipe_statistic
+from ..data_preprocessing.utils import chroma_filter_operator
+from ..data_preprocessing.default import USER_SEARCH_TEMPLATE,OPERATOR_MAPPING,TRAIT_MAPPING
+from ..modeling.recommendation_utils import recommendation_doc_id_pipeline
+from .in_memory_variables import (
+    _app_data
+    )
+
 
 root_directory = Path(os.getcwd())
 
@@ -206,7 +214,7 @@ def shared_filters(trigger_id, store_id):
                 ),
                 html.Hr(),
 
-                filter_header("Dislike ingredients","dislike_ingredient","filter_dropdown"),
+                filter_header("Dislike ingredients","dislike_ingredient","filter_dropdown",disable_priority=True),
                 dbc.Collapse(
                     dcc.Dropdown(
                         dislike_ingredients,
@@ -325,7 +333,7 @@ def shared_filters(trigger_id, store_id):
                 ),
                 html.Hr(),
 
-                filter_header("Protein content","fiber_content","filter_checklist"),
+                filter_header("Fiber content","fiber_content","filter_checklist"),
                 dbc.Collapse(
                     dbc.Checklist(
                         options=[{"label": item, "value": item} for item in fiber_content_list],
@@ -570,15 +578,21 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
             # Recommendation output modals
             recipe_info_modal(search_id),
             recipe_statistic_modal(search_id),
-
+            
+            html.Hr(),
+            dmc.Text("Search pipeline settings:", size="xl", fw=700, td="underline"),
             dbc.Row(
                 [
                     dbc.Col(
                         [
                             dmc.NumberInput(
-                                label = "Number of candidate recipes:",
+                                label = "Number of candidate:",
                                 id = f"{search_id}_candidate",
-                                min=50, max=200,value=50, className="w-75"
+                                min=200, max=2000,value=300, className="w-75"
+                            ),
+                            dbc.Tooltip(
+                                "Number of candidate retrieved from Chroma vectorstore",
+                                target=f"{search_id}_candidate"
                             )
                         ],
                         width=4,
@@ -586,9 +600,13 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
                     dbc.Col(
                         [
                             dmc.NumberInput(
-                                label = "Number of top rank recommendations:",
-                                id = f"{search_id}_n_top",
-                                min=1, max=10,value=5, className="w-75"
+                                label = "Number of recommendations:",
+                                id = f"{search_id}_n_recommendations",
+                                min=10, max=200,value=50, className="w-75"
+                            ),
+                            dbc.Tooltip(
+                                "Number of recipes generated from the recommendation model",
+                                target=f"{search_id}_n_recommendations"
                             )
                         ],
                         width=4,
@@ -596,16 +614,196 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
                     dbc.Col(
                         [
                             dmc.NumberInput(
-                                label = "Number of least likely recommendations:",
-                                id = f"{search_id}_n_bottom",
-                                min=1, max=5,value=3, className="w-75"
+                                label = "Number of similar users:",
+                                id = f"{search_id}_n_user",
+                                min=5, max=50,value=10, className="w-75"
+                            ),
+                            dbc.Tooltip(
+                                """Number of users similar to the profile to retrieve. 
+                                This is used for collaboration and hybrid models""",
+                                target=f"{search_id}_n_user"
                             )
                         ],
                         width=4,
                     )
                 ],align="end"
             ),
-            dbc.Button("Search", id = search_id, color="primary", className="mt-1 w-25",n_clicks = 0),
+            dbc.Row(
+                [
+                    dbc.Col(
+                        [
+                            dmc.NumberInput(
+                                label = "Top n to retrieve:",
+                                id = f"{search_id}_n_top",
+                                min=1, max=20,value=5, className="w-75"
+                            ),
+                            dbc.Tooltip(
+                                """Retrieve n top recipe from the list of ranked 
+                                recommendations which have the highest scores""",
+                                target=f"{search_id}_n_top"
+                            )
+                        ],
+                        width=4,
+                    ),
+                    dbc.Col(
+                        [
+                            dmc.NumberInput(
+                                label = "Bottom n to retrieve:",
+                                id = f"{search_id}_n_bottom",
+                                min=1, max=10,value=3, className="w-75"
+                            ),
+                            dbc.Tooltip(
+                                """Retrieve n bottom recipe from the list of ranked 
+                                recommendations which have the lowest scores""",
+                                target=f"{search_id}_n_bottom"
+                            )
+                        ],
+                        width=4,
+                    )
+                ],align="end"
+            ),
+            dbc.Row(
+                [
+                    dbc.Col(
+                        [   
+                            dmc.Text("Recommendation model:", fw=500, size="lg",className="mt-1"),
+                            dbc.RadioItems(
+                                options=[
+                                    {"label": "BM25", "value": "item-content",
+                                     "label_id":f"{search_id}_item-content_tooltip"},
+                                    {"label": "SVD", "value": "collab",
+                                     "label_id":f"{search_id}_collab_tooltip"},
+                                    {"label": "LightFM", "value": "hybrid",
+                                     "label_id":f"{search_id}_hybrid_tooltip"}
+                                ],
+                                value="item-content",
+                                id=f"{search_id}_rec_model_switch",
+                                inline=True,
+                                className="mb-1"
+                            ),
+                            dbc.Tooltip(
+                                "BM25 is a item-content filtering model.",
+                                target=f"{search_id}_item-content_tooltip"
+                            ),
+                            dbc.Tooltip(
+                                "SVD is a user-item interaction filtering model.",
+                                target=f"{search_id}_collab_tooltip"
+                            ),
+                            dbc.Tooltip(
+                                """LightFM is a hybrid model which takes into account the
+                                context of item content and user.""",
+                                target=f"{search_id}_hybrid_tooltip"
+                            )
+                        ],
+                        width=4,
+                    )
+                ],align="end"
+            ),
+            dbc.Row(
+                [
+                    dbc.Col(
+                        [
+                            dmc.NumberInput(
+                                label = "Profile weight:",
+                                id = f"{search_id}_profile_w",
+                                min=0, max=10,value=1.5, 
+                                decimalScale=2,step=0.1,
+                                className="w-75"
+                            ),
+                            dbc.Tooltip(
+                                """The bias weight use to pull the Chroma retrieval results toward user profile. 
+                                Should be higher than filter weight.""",
+                                target=f"{search_id}_profile_w"
+                            )
+                        ],
+                        width=4,
+                    ),
+                    dbc.Col(
+                        [
+                            dmc.NumberInput(
+                                label = "Filters weight:",
+                                id = f"{search_id}_filters_w",
+                                min=0, max=10,value=0.75,
+                                decimalScale=2,step=0.1,
+                                className="w-75"
+                            ),
+                            dbc.Tooltip(
+                                """The bias weight use to pull the Chroma retrieval results toward the chosen filter with
+                                'Priority filter' option. Should be lower than Profile weight.""",
+                                target=f"{search_id}_filters_w"
+                            )
+                        ],
+                        width=4,
+                    )
+                ],align="end"
+            ),  
+            dbc.Row(
+                [
+                    dbc.Col(
+                        [
+                            dmc.NumberInput(
+                                label = "ReRanker pull force:",
+                                id = f"{search_id}_ranker_bias_w",
+                                min=0, max=5,value=0.35, 
+                                decimalScale=2,step=0.05,
+                                className="w-75"
+                            ),
+                            dbc.Tooltip(
+                                """When reranking the recommendation, we are also taking into account the context
+                                of bias used in Chroma vectorstore retrieval step by introducing the bias pull force.
+                                This will penalize the ranking score for negative bias, and increase score for positive
+                                bias when evaluating the retrieved recipes. The recommended value is [0,1] but can
+                                go higher for stronger bias effect.
+                                """,
+                                target=f"{search_id}_ranker_bias_w"
+                            )
+                        ],
+                        width=4,
+                    ),
+                    dbc.Col(
+                        [
+                            dmc.NumberInput(
+                                label = "Health score weight:",
+                                id = f"{search_id}_health_w",
+                                min=0, max=1,value=0,
+                                decimalScale=2,step=0.05,
+                                className="w-75"
+                            ),
+                            dbc.Tooltip(
+                                """
+                                Rescale the ranking result to prioritize healthy recipes by introducing
+                                the health score to it. The higher the stronger the effect, at 0 there is no rescale.
+                                """,
+                                target=f"{search_id}_health_w"
+                            )
+                        ],
+                        width=4,
+                    ),
+                    dbc.Col(
+                        [   
+                            dmc.Text("Healthy recipe criteria:", fw=500, size="lg",className="mt-1"),
+                            dbc.RadioItems(
+                                options=[
+                                    {"label": "WHO", "value": "who_score"},
+                                    {"label": "FSA", "value": "fsa_score"}
+                                ],
+                                value="who_score",
+                                id=f"{search_id}_health_score_switch",
+                                inline=True,
+                                className="mb-1"
+                            ),
+                            dbc.Tooltip(
+                                "Choose the type of score for ranking. Only have an effect if health score weight >0",
+                                target=f"{search_id}_health_score_switch"
+                            ),
+                        ],
+                        width=4,
+                    )
+                ],align="end"
+            ),
+
+
+            dbc.Button("Search", id = search_id, color="primary", className="mt-3 w-25",n_clicks = 0),
             html.Hr(),
             dmc.Text('Legend:', fw=700,size="lg"),
             dmc.Group(
@@ -615,16 +813,18 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
                  dmc.Text("Not a match")
                  ]
             ),
+            #PLACEHOLDER: uncomment to enable macro/micro nutrient
+            # dmc.Group(
+            #     [dmc.Badge("No. of nutrient match",variant="outline",color = 'lime'),
+            #      dmc.Text("High match (>80%)"),
+            #      dmc.Badge("No. of nutrient match",variant="outline",color = 'yellow'),
+            #      dmc.Text("Medium match (35-80%)")
+            #      ]
+            # ),
             dmc.Group(
-                [dmc.Badge("No. of nutrient match",variant="outline",color = 'lime'),
-                 dmc.Text("High match (>80%)"),
-                 dmc.Badge("No. of nutrient match",variant="outline",color = 'yellow'),
-                 dmc.Text("Medium match (35-80%)")
-                 ]
-            ),
-            dmc.Group(
-                [dmc.Badge("No. of nutrient match",variant="outline",color = 'red'),
-                 dmc.Text("Low match (<35%)"),
+                [
+                #  dmc.Badge("No. of nutrient match",variant="outline",color = 'red'),
+                #  dmc.Text("Low match (<35%)"),
                  dmc.Badge("Exact filter condition",variant="filled",color = 'lime'),
                  dmc.Text("A match")
                  ]
@@ -640,7 +840,8 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
     @callback(
         [
             Output(f"{search_id}_recommendation_outputs","children"),
-            Output(f"{search_id}_recommendation_store","data")
+            Output(f"{search_id}_recommendation_store","data"),
+            Output("notification-container", "sendNotifications",  allow_duplicate=True)
          ],
         inputs = dict(
             search = Input(search_id,"n_clicks"),
@@ -648,27 +849,193 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
             filter_dict = Input(filter_store_id,"data")  
         ),
         state = dict(
-            
+            url = State("url","pathname"),
+            #page stores
+            page_stores = State({"page":ALL,"type":"input_store"},"data"),
+            #Profile info
             profile_dict = State(profile_store_id,"data"),
+            # Pipeline settings
             n_candidate = State(f"{search_id}_candidate","value"),
+            n_recommendations = State(f"{search_id}_n_recommendations","value"),
+            n_user = State(f"{search_id}_n_user","value"),
             n_top = State(f"{search_id}_n_top","value"),
-            n_bottom = State(f"{search_id}_n_bottom","value")
+            n_bottom = State(f"{search_id}_n_bottom","value"),
+            rec_model = State(f"{search_id}_rec_model_switch","value"),
+            profile_w = State(f"{search_id}_profile_w","value"),
+            filters_w = State(f"{search_id}_filters_w","value"),
+            ranker_bias_w = State(f"{search_id}_ranker_bias_w","value"),
+            health_w = State(f"{search_id}_health_w","value"),
+            health_name = State(f"{search_id}_health_score_switch","value")
         ),
         prevent_initial_call = True
     )
     def generate_recommendation(
-            search,filter_dict,profile_dict,
-            n_candidate,n_top,n_bottom
+            search,filter_dict,url,
+            page_stores,profile_dict,
+            n_candidate,n_recommendations,n_user,
+            n_top,n_bottom,rec_model,profile_w,
+            filters_w,ranker_bias_w,health_w,health_name
         ):
         """
-        Generating recommendations based on parameters,profile and filters.
+        Generating recommendations based on parameters,profile and filters. This callback
+        function is shared between pages, but perhaps we can customize different function for each page later.
         """
+
+        url = url[1:]
+
+        context_dict = ctx.args_grouping
+        page_df = pd.json_normalize(context_dict["page_stores"])
+        idx = page_df.loc[page_df['id.page']==url].index[0]
+
+        #constraint information to use
+        constraint_df = pd.read_csv(root_directory / 'data/processed/ui_feature_constraints.csv')
+        constraint_df['value'] = constraint_df['value'].apply(ast.literal_eval)
+
+        recommendation_data = {}
+        include_traits = []
+        exclude_traits = []
+        pos_rank_bias = None
+        neg_rank_bias = None
+
+        # Handle input query and bias logics when switching pages ---------------------------
+        if url == "text_search":
+
+            # Check if there is input data before running the pipeline
+            page_data = page_stores[idx]
+            recipe_name = page_data["recipe_name"]
+            recipe_descript = page_data["recipe_description"]
+            recipe_dislike = page_data["recipe_dislike"]
+
+            if (recipe_name in ["",None]) and (recipe_descript in ["",None]) and (recipe_dislike in ["",None]):
+                notifi = [dict(
+                    title="Requirement",
+                    message="Please input recipe name/description for processing.",
+                    color="red",
+                    action="show",
+                    autoClose=2000,
+                    withCloseButton=True
+                )]
+
+                return None,recommendation_data,notifi
+            
+            if recipe_descript not in [None,'']:  # Add positive bias to ranking step
+                pos_rank_bias = recipe_descript
+
+            if recipe_dislike not in [None,'']:  # Add negative bias to ranking step
+                exclude_traits.append((recipe_dislike,profile_w))
+                neg_rank_bias = recipe_dislike
+
+            # Create search query
+            query = """
+            The recipe name:{}.
+            Extra info:
+            {}
+            """
+            query = query.format(recipe_name,recipe_descript)
+
+        else:
+            notifi = [dict(
+                title="Not supported",
+                message="Current URL isn't supported, please switch page",
+                color="red",
+                action="show",
+                autoClose=2000,
+                withCloseButton=True
+            )]
+            return None,recommendation_data,notifi
+        
+        # Handle all reamining shared filters input to the pipeline ---------------------------
+
+        # Check whether we are testing chunk data only, then we need to filter the list of recipe ID
+        # and user ID in related chunk data, as as Chroma vectorstore might return ID out of ID mapping
+        # of testing models.
+        if _app_data['chunk_test']:
+            limit_user_ids = _app_data['user_reviews']["user_id"].unique().tolist()
+        else:
+            limit_user_ids = None
+
+        user_profile = USER_SEARCH_TEMPLATE.format(
+            profile_dict.get("cuisine_select",[]),
+            profile_dict.get("cooking_method_select",[]),
+            profile_dict.get("difficulty_select",[]),
+            profile_dict.get("protein_select",[]),
+            profile_dict.get("fiber_select",[]),
+            profile_dict.get("fat_select",[]),
+            profile_dict.get("carbohydrate_select",[]),
+            profile_dict.get("sodium_select",[])
+        )
+        include_traits.append(
+            (user_profile,profile_w)  # Add User Profile bias for collaboration search
+        )
+
+        # Logic to add Chroma search operator based on exact filters
+        filter_df = pd.DataFrame(filter_dict)
+        type_mapping = dict(
+            filter_name = list(OPERATOR_MAPPING.keys()),
+            operator_type = list(OPERATOR_MAPPING.values())
+        )
+        if filter_df.empty:
+            filter_operators = None
+        else:
+            filter_operators = chroma_filter_operator(filter_df,type_mapping)
+
+        # Logic to add extra priority trait to query embedding
+        trait_df = filter_df
+        if not trait_df.empty:
+            trait_df = trait_df.loc[
+                (~(filter_df['filter_value'].isin([None,[]]))) & 
+                (filter_df['priority_type']=='priority')
+            ]
+        for _,row in trait_df.iterrows():  
+            include_traits.append((
+                TRAIT_MAPPING[row['filter_name']].format(row['filter_value']),
+                filters_w
+            ))
+
+        if health_w > 0: # weighted rerank score based on healthy score
+            min_max = constraint_df.loc[constraint_df['feature']=='who_score','value'].tolist()[0]
+            weighted_rank_config = {
+                "ranker_weight": 1-health_w,
+                "feature_weight": health_w,
+                "feature_name": health_name,
+                "feature_min": min_max[0],
+                "feature_max": min_max[1]
+            }
+
+        query_df,rank_df = recommendation_doc_id_pipeline(
+            data_df = _app_data["recipe_df"],
+            vectorstore = _app_data["vectorstore"],
+            rank_model = _app_data["reranker"],
+            query = query,
+            filters = filter_operators,
+            dataset = _app_data['dataset'],
+            user_profile = user_profile,
+            user_vectorstore = _app_data["user_vectorstore"],
+            recommendation_model = _app_data[rec_model],
+            embedding_model = _app_data["embedding_model"],
+            model_type = rec_model,
+            add_biases = include_traits,
+            remove_biases = exclude_traits,
+            candidate = n_candidate,
+            n_recommendations = n_recommendations,
+            n_user = n_user,
+            n_rank = n_recommendations,
+            pos_rank_bias = pos_rank_bias,
+            neg_rank_bias = neg_rank_bias,
+            ranker_bias_weight = ranker_bias_w,
+            weighted_rank_config = weighted_rank_config if health_w > 0 else None,
+            limit_user_ids = limit_user_ids,
+            random_state = 0
+        )
+            
+
         recommendation_data = {}
         #PLACEHOLDER: Logic to generate recommendation and its statistics from database in the server
         if filter_dict!={}:
-            print(pd.DataFrame(filter_dict))
-            print('====')
-            print(profile_dict)
+            # print(filter_dict)
+            # print(pd.DataFrame(filter_dict))
+            # print('====')
+            # print(profile_dict)
             recipe_statistics = generate_recipe_statistic(filter_dict,profile_dict,n_candidate)
 
             output_list = []  # Output top + bottom recommendation
@@ -708,9 +1075,9 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
                     
             ])
 
-            return recommendations,recommendation_data
+            return recommendations,recommendation_data,dash.no_update
         else:
-            return [],recommendation_data
+            return [],recommendation_data,dash.no_update
         
     @callback(
         Output(f"{search_id}_info_modal","is_open"),
