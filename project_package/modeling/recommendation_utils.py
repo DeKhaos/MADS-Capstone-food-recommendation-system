@@ -13,7 +13,7 @@ from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
 import numpy as np
 import pandas as pd
-from sklearn.metrics.pairwise import paired_cosine_distances
+from sklearn.metrics.pairwise import paired_cosine_distances,cosine_distances
 from rectools import ExternalIds
 from rectools.metrics.distances import PairwiseDistanceCalculator
 from rectools.metrics import (
@@ -97,7 +97,25 @@ class PairwiseCosineDistanceCalculator(PairwiseDistanceCalculator):
         result[invalid_mask] = np.nan
         
         return result
+
+def calculate_ild(embeddings: np.ndarray):
+    """
+    Calculate Intra-List Diversity from embeddings vector.
+    """
+
+    # Compute the pairwise distance matrix
+    dist_matrix = cosine_distances(embeddings)
     
+    # Sum the distances (the matrix is symmetric, so we sum everything)
+    # and subtract the diagonal (which is always 0 distance to self)
+    n = dist_matrix.shape[0]
+    if n <= 1: return 0.0 # Diversity of 1 item is 0
+    
+    total_dist = np.sum(dist_matrix)
+    
+    # Average by the number of pairs (n * (n-1))
+    return total_dist / (n * (n - 1))
+
 def preprocessing_docs(
         documents: Union[list,str],
         remove_punctuation: bool = False
@@ -894,12 +912,12 @@ def recommendation_doc_id_pipeline(
     rank_df['pipeline_step'] = 'ranked'
 
     if include_fulldata:
-        if model_type == 'item-content':
+        if model_type in ['item-content','hybrid']:
             doc_id_df = pd.concat((pre_filt_df,candidate_df,rec_df,rank_df)).reset_index(drop=True)
         else:
             doc_id_df = pd.concat((pre_filt_df,rec_df,rank_df)).reset_index(drop=True)
     else:
-        if model_type == 'item-content':
+        if model_type in ['item-content','hybrid']:
             doc_id_df = pd.concat((candidate_df,rec_df,rank_df)).reset_index(drop=True)
         else:
             doc_id_df = pd.concat((rec_df,rank_df)).reset_index(drop=True)

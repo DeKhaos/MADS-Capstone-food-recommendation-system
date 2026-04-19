@@ -627,3 +627,27 @@ def recipe_statistic_modal(search_id:str):
     )
     return component
 
+def visualization_modal(search_id:str):
+    """
+    A popup recipe statistic modal.
+
+    Parameters
+    ----------
+
+    search_id: str
+        The id of the search button.
+
+    Returns
+    ----------
+
+    component: dash component
+        The popup modal.
+    """
+    component = dbc.Modal(
+        id=f"{search_id}_visualization_modal",
+        children=[dbc.ModalHeader("Visualization"), dbc.ModalBody(id=f"{search_id}_visualization_modal_body")],
+        is_open=False,
+        size='xl'
+    )
+    return component
+
