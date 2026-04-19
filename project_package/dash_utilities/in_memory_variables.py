@@ -10,7 +10,8 @@ from rectools.models import load_model
 
 from project_package.modeling.recommendation_utils import get_embedding_model,load_vector_store
 from ..data_preprocessing.resource_access import (
-    load_preference_data,load_user_review_data,load_recipe_data,construct_rec_train_dataset
+    load_preference_data,load_user_review_data,load_recipe_data,construct_rec_train_dataset,
+    load_recipe_url
     )
 
 _app_data = {
@@ -18,6 +19,7 @@ _app_data = {
     "vectorstore":None,
     "user_vectorstore":None,
     "recipe_df":None,
+    "url_df":None,
     "user_reviews":None,
     "preference_df":None,
     "dataset":None,
@@ -52,6 +54,7 @@ user_vectorstore = load_vector_store(
 
 # Data for model to create recommendation
 recipe_df = load_recipe_data(root_directory, full_data!="full")
+url_df = load_recipe_url(root_directory, full_data!="full")
 user_reviews = load_user_review_data(root_directory,recipe_df, full_data!="full")
 preference_df = load_preference_data(root_directory,recipe_df,user_reviews)
 if full_data!="full":  # for chunk test, need to reduce to include only user used in chunk model
@@ -83,6 +86,7 @@ _app_data['embedding_model'] = embedding_model
 _app_data['vectorstore'] = vectorstore
 _app_data['user_vectorstore'] = user_vectorstore
 _app_data['recipe_df'] = recipe_df
+_app_data['url_df'] = url_df
 _app_data['user_reviews'] = user_reviews
 _app_data['preference_df'] = preference_df
 _app_data['dataset'] = dataset
