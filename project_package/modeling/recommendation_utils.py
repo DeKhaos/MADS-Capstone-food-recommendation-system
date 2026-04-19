@@ -1,4 +1,5 @@
 import os
+import ast
 import warnings
 from dotenv import load_dotenv
 from typing import Union,List,Tuple,Literal
@@ -36,7 +37,7 @@ from flashrank import Ranker
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
-from ..data_preprocessing.default import ITEM,ITEM_ML
+from ..data_preprocessing.default import ITEM,ITEM_ML,DASH_ID_2_DATA
 
 load_dotenv()  # load variable from .env file
 
@@ -703,6 +704,8 @@ def recommendation_doc_id_pipeline(
 
     score_df: pd.DataFrame
         The ranking score of the final recommendation items to show the users.
+    
+    NOTE: If at any step, the filtered result doesn't have any records, the pipeline will stop and return empty dataframes. 
     """
 
     # Checking pipeline condition upfront
@@ -764,7 +767,9 @@ def recommendation_doc_id_pipeline(
         ].copy()
 
         candidate_df['pipeline_step'] = 'candidate'
-
+        if candidate_df.shape[0] == 0:
+            return pd.DataFrame({}),pd.DataFrame({})
+        
     # Layer 2: recommendation
 
     # limit result for chunk test
@@ -826,7 +831,9 @@ def recommendation_doc_id_pipeline(
         [item_id] if features is None else [item_id] + features
     ].copy()
     rec_df['pipeline_step'] = 'recommendation'
-
+    if rec_df.shape[0] == 0:
+        return pd.DataFrame({}),pd.DataFrame({})
+    
     # Layer 3: Top n ranked
     doc_ids_map = dict(
         zip(range(len(top_n)),top_n.tolist())
@@ -960,3 +967,75 @@ def generate_feature_constraint(
     constraint_df = pd.DataFrame(feature_dict)
     
     return constraint_df
+
+def generate_recipe_statistic(
+        filter_dict: dict,
+        recipe_df: pd.DataFrame,
+        url_df: pd.DataFrame,
+        rank_df: pd.DataFrame
+    ):
+    """
+    Generate recipe card information.
+
+    Parameters
+    ----------
+
+    filter_dict: dict
+        The stored filter values.
+
+    recipe_df: pd.DataFrame
+        The recipe metadata.
+
+    url_df: pd.DataFrame
+        Store the urls of the recipes.
+
+    rank_df: pd.DataFrame
+        Flashrank result
+
+    Returns
+    ----------
+
+    recipe_list: list[dict]
+        The list of generated recipe, each recipe is a dictionary with meta info.
+    """
+
+    filter_df = pd.DataFrame(filter_dict)
+    if filter_df.shape[0] != 0:
+        filter_df = filter_df.loc[~filter_df['filter_value'].isin([None,[]])]  # remove filters that have no selection
+
+    recipe_ids = rank_df[ITEM].tolist()
+    recipe_list = []
+
+    for recipe_id in recipe_ids:
+        recipe_template = {"badges":[]}  # badge will be list of tuple (filter_name,priority_type,filter_match)
+        recipe_template['recipe_id'] = int(recipe_id)
+        recipe_template['recipe_name'] = recipe_df.loc[recipe_df[ITEM]==recipe_id,"recipe_name"].values[0]
+        recipe_template['relevance_score'] = rank_df.loc[rank_df[ITEM]==recipe_id,"relevance_score"].values[0]
+        recipe_template['fsa_score'] = recipe_df.loc[recipe_df[ITEM]==recipe_id,"fsa_score"].values[0]
+        recipe_template['who_score'] = recipe_df.loc[recipe_df[ITEM]==recipe_id,"who_score"].values[0]
+        image_urls = ast.literal_eval(url_df.loc[url_df[ITEM]==recipe_id,"image_url"].values[0])
+        # choose a random URL if available in record
+        recipe_template['image_url'] = np.random.choice(image_urls,1)[0] if image_urls not in [None,[],''] else None  
+
+        if not filter_df.empty:
+            sample_df = filter_df.copy()
+            sample_df['filter_match'] = False  # Default set badge match to False
+            # any exact filter should be true (match withChroma)
+            sample_df.loc[(sample_df['priority_type'] == 'exact'),'filter_match'] = True  
+
+            for _,row in sample_df.loc[(sample_df['priority_type'] == 'priority')].copy().iterrows():  # iterate on a copy
+                filter_source = set(row['filter_value'])
+                if row['filter_name'] in ["like_ingredient","cook_method"]:  # data record is list type
+                    recipe_source = set(recipe_df.loc[recipe_df[ITEM]==recipe_id,DASH_ID_2_DATA[row['filter_name']]].values[0])
+                    is_match = len(filter_source.intersection(recipe_source)) > 0  # at least 1 common item
+                else:  # data record is str type
+                    recipe_source = recipe_df.loc[recipe_df[ITEM]==recipe_id,DASH_ID_2_DATA[row['filter_name']]].values[0]
+                    is_match = recipe_source in filter_source  # record value in filter list
+                sample_df.loc[sample_df['filter_name'] == row['filter_name'],'filter_match'] = is_match
+
+            for _,row in sample_df.iterrows():  # add badges to recipe
+                recipe_template['badges'].append((row['filter_name'],row['priority_type'],row['filter_match']))
+
+        recipe_list.append(recipe_template)
+
+    return recipe_list

@@ -20,7 +20,7 @@ from .default import (
     USER_ML,ITEM_ML,RATING_ML_COL,
     ML_ITEM_CAT_FEATURES,ML_USER_CAT_FEATURES,EXPLODE_ML_ITEM_FEATURES,EXPLODE_ML_USER_FEATURES,
     ML_ITEM_ALL_FEATURES,
-    RECIPE_TO_USE,RECIPE_COLUMN_MAPPING,RECIPE_META_COLS,REVIEW_TO_USE,REVIEW_COLUMN_MAPPING
+    RECIPE_TO_USE,RECIPE_URL_TO_USE,RECIPE_COLUMN_MAPPING,RECIPE_META_COLS,REVIEW_TO_USE,REVIEW_COLUMN_MAPPING
 )
 
 def load_chunks(
@@ -33,7 +33,7 @@ def load_chunks(
     # Find all files matching file_syntax
     files = glob.glob(os.path.join(folder_path, file_syntax))
     files = sorted(files)
-    
+
     # Load and concatenate
     df_list = [pd.read_csv(f,usecols=usecols) for f in files]
     combined_df = pd.concat(df_list, ignore_index=True)
@@ -71,7 +71,7 @@ def load_recipe_data(
     recipe_df.rename(columns = RECIPE_COLUMN_MAPPING,inplace=True)
 
     recipe_df['ingredients'] = recipe_df['ingredients'].apply(ast.literal_eval)  # convert ingredient to list
-
+    recipe_df['instructions'] = recipe_df['instructions'].apply(ast.literal_eval)  # convert instructions to list
     if not os.path.exists(root_directory / 'data/processed/recipes_generated_features.csv'):
         recipe_category_df = pandas_sql_df("SELECT * from RECIPES")
     else:
@@ -88,6 +88,45 @@ def load_recipe_data(
     recipe_df = recipe_df.loc[(recipe_df['total_time']<=1440)&(recipe_df['calories']<= 5000)].reset_index(drop=True)
 
     return recipe_df
+
+def load_recipe_url(
+    root_directory: Union[Path,str],
+    first_chunk_only: bool = False
+):
+    """
+    Extend helper function from 'load_recipe_data' to get image_url
+    """
+
+    #NOTE: might need update to retrieve the processed df from S3
+
+    if first_chunk_only:
+        recipe_df = pd.read_csv(root_directory / "data/processed/Recipes/recipes_chunk_0.csv",usecols=RECIPE_URL_TO_USE)
+    else:
+        recipe_df = load_chunks(root_directory / "data/processed/Recipes","recipes_chunk_*.csv",usecols=RECIPE_URL_TO_USE)
+    recipe_df.rename(columns = RECIPE_COLUMN_MAPPING,inplace=True)
+
+    recipe_df['ingredients'] = recipe_df['ingredients'].apply(ast.literal_eval)  # convert ingredient to list
+
+    if not os.path.exists(root_directory / 'data/processed/recipes_generated_features.csv'):
+        recipe_category_df = pandas_sql_df("SELECT * from RECIPES")
+    else:
+        recipe_category_df = pd.read_csv(root_directory / "data/processed/recipes_generated_features.csv")
+
+    recipe_category_df['original_id'] = recipe_category_df['original_id'].astype(int)
+    recipe_category_df['cooking_method'] = recipe_category_df['cooking_method'].str.strip("{}").str.split(",")
+
+    recipe_df = recipe_df.merge(recipe_category_df,on=['original_id','source'],how='inner')
+    recipe_df = recipe_df.dropna(subset = RECIPE_META_COLS)
+    recipe_df = recipe_df[recipe_df["ingredients"].apply(lambda x: x != [])]  # remove empty ingredient record
+
+    #Drop recipe that take too long, or calories value that are unreasonably high for a common meal
+    recipe_df = recipe_df.loc[(recipe_df['total_time']<=1440)&(recipe_df['calories']<= 5000)].reset_index(drop=True)
+
+    # get only image related columns
+    recipe_df = recipe_df[['recipe_id','original_id','source','image_url']]
+
+    return recipe_df
+    
 
 def load_user_review_data(
         root_directory:Union[Path,str],
