@@ -20,10 +20,10 @@ layout = html.Div(
             value='',id=f"{page_name}_recipe_descript",debounce=True,
             size="lg", placeholder="Give a brief description of the recipe, cooking steps or requirements,etc."),
 
-        dmc.Text("Give details on ingredient you might not want, or allergens if any", fw=700,className="my-2"),
+        dmc.Text("Exclude details", fw=700,className="my-2"),
         dbc.Textarea(
             value='',id=f"{page_name}_recipe_dislike",debounce=True,
-            size="lg", placeholder="Give a brief description of the recipe, cooking steps or requirements,etc.")
+            size="lg", placeholder="Give details on ingredient you might not want, or allergens if any.")
         ],
     className="m-2 dbc"
 )

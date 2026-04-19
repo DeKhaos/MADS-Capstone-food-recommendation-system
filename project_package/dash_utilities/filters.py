@@ -1,5 +1,6 @@
 import os,ast
 from pathlib import Path
+import json
 
 import dash
 from dash import html, Output, Input, State, ALL,MATCH, callback, ctx, dcc
@@ -7,15 +8,19 @@ import dash_mantine_components as dmc
 import dash_bootstrap_components as dbc
 import pandas as pd
 import numpy as np
-import json
+import plotly.express as px
 
-from .modals import recommendation_card,recipe_info_modal
+from .modals import recommendation_card,recipe_info_modal,visualization_modal
 from ..data_preprocessing.utils import chroma_filter_operator
-from ..data_preprocessing.default import USER_SEARCH_TEMPLATE,OPERATOR_MAPPING,TRAIT_MAPPING,DASH_ID_2_DATA_v2
-from ..modeling.recommendation_utils import recommendation_doc_id_pipeline,generate_recipe_statistic
+from ..data_preprocessing.default import (
+    USER_SEARCH_TEMPLATE,OPERATOR_MAPPING,TRAIT_MAPPING,DASH_ID_2_DATA_v2,ITEM,
+    ITEM_CAT_FEATURES,EXPLODE_ITEM_FEATURES
+)
+from ..modeling.recommendation_utils import recommendation_doc_id_pipeline,generate_recipe_statistic,calculate_ild,keep_n_labels
 from .in_memory_variables import (
     _app_data
     )
+from ..visualization import sankey_plot
 from ..aws.data_access import build_s3_client,fetch_s3_bytes
 
 root_directory = Path(os.getcwd())
@@ -578,6 +583,7 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
             
             # Recommendation output modals
             recipe_info_modal(search_id),
+            visualization_modal(search_id),
             # recipe_statistic_modal(search_id),
             
             html.Hr(),
@@ -603,7 +609,7 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
                             dmc.NumberInput(
                                 label = "Number of recommendations:",
                                 id = f"{search_id}_n_recommendations",
-                                min=10, max=200,value=50, className="w-75"
+                                min=10, max=200,value=100, className="w-75"
                             ),
                             dbc.Tooltip(
                                 "Number of recipes generated from the recommendation model",
@@ -630,7 +636,21 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
                 ],align="end"
             ),
             dbc.Row(
-                [
+                [   
+                    dbc.Col(
+                        [
+                            dmc.NumberInput(
+                                label = "Number of item to rank:",
+                                id = f"{search_id}_n_rank",
+                                min=10, max=200,value=50, className="w-75"
+                            ),
+                            dbc.Tooltip(
+                                "Number of recipes to rank from the recommendation model output",
+                                target=f"{search_id}_n_rank"
+                            )
+                        ],
+                        width=4,
+                    ),
                     dbc.Col(
                         [
                             dmc.NumberInput(
@@ -873,6 +893,7 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
             n_candidate = State(f"{search_id}_candidate","value"),
             n_recommendations = State(f"{search_id}_n_recommendations","value"),
             n_user = State(f"{search_id}_n_user","value"),
+            n_rank = State(f"{search_id}_n_rank","value"),
             n_top = State(f"{search_id}_n_top","value"),
             n_bottom = State(f"{search_id}_n_bottom","value"),
             rec_model = State(f"{search_id}_rec_model_switch","value"),
@@ -887,7 +908,7 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
     def generate_recommendation(
             search,filter_dict,url,
             page_stores,profile_dict,
-            n_candidate,n_recommendations,n_user,
+            n_candidate,n_recommendations,n_user,n_rank,
             n_top,n_bottom,rec_model,profile_w,
             filters_w,ranker_bias_w,health_w,health_name
         ):
@@ -895,23 +916,6 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
         Generating recommendations based on parameters,profile and filters. This callback
         function is shared between pages, but perhaps we can customize different function for each page later.
         """
-
-        url = url[1:]
-
-        context_dict = ctx.args_grouping
-        page_df = pd.json_normalize(context_dict["page_stores"])
-        idx = page_df.loc[page_df['id.page']==url].index[0]
-
-        #constraint information to use
-        constraint_df = pd.read_csv(root_directory / 'data/processed/ui_feature_constraints.csv')
-        constraint_df['value'] = constraint_df['value'].apply(ast.literal_eval)
-
-        recommendation_data = {}
-        include_traits = []
-        exclude_traits = []
-        pos_rank_bias = None
-        neg_rank_bias = None
-
         # Popup message template
         message_pop = lambda title,message:[dict(
             title=title,
@@ -922,185 +926,313 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
             withCloseButton=True
         )]
 
-        # Handle input query and bias logics when switching pages ---------------------------
-        if url == "text_search":
+        try:
+            url = url[1:]
 
-            # Check if there is input data before running the pipeline
-            page_data = page_stores[idx]
-            recipe_name = page_data["recipe_name"]
-            recipe_descript = page_data["recipe_description"]
-            recipe_dislike = page_data["recipe_dislike"]
+            context_dict = ctx.args_grouping
+            page_df = pd.json_normalize(context_dict["page_stores"])
+            idx = page_df.loc[page_df['id.page']==url].index[0]
 
-            if (recipe_name in ["",None]) and (recipe_descript in ["",None]) and (recipe_dislike in ["",None]):
-                notifi = message_pop("Requirement","Please input recipe name/description for processing.")
+            #constraint information to use
+            constraint_df = pd.read_csv(root_directory / 'data/processed/ui_feature_constraints.csv')
+            constraint_df['value'] = constraint_df['value'].apply(ast.literal_eval)
 
+            recommendation_data = {}
+            include_traits = []
+            exclude_traits = []
+            pos_rank_bias = None
+            neg_rank_bias = None
+
+            # Handle input query and bias logics when switching pages ---------------------------
+            if url == "text_search":
+
+                # Check if there is input data before running the pipeline
+                page_data = page_stores[idx]
+                recipe_name = page_data["recipe_name"]
+                recipe_descript = page_data["recipe_description"]
+                recipe_dislike = page_data["recipe_dislike"]
+
+                if (recipe_name in ["",None]) and (recipe_descript in ["",None]) and (recipe_dislike in ["",None]):
+                    notifi = message_pop("Requirement","Please input recipe name/description for processing.")
+
+                    return None,recommendation_data,notifi
+                
+                if recipe_descript not in [None,'']:  # Add positive bias to ranking step
+                    pos_rank_bias = recipe_descript
+
+                if recipe_dislike not in [None,'']:  # Add negative bias to ranking step
+                    exclude_traits.append((recipe_dislike,profile_w))
+                    neg_rank_bias = recipe_dislike
+
+                # Create search query
+                query = """
+                The recipe name:{}.
+                Extra info:
+                {}
+                """
+                query = query.format(recipe_name,recipe_descript)
+
+            else:
+                notifi = message_pop("Not supported","Current URL isn't supported, please switch page")
                 return None,recommendation_data,notifi
             
-            if recipe_descript not in [None,'']:  # Add positive bias to ranking step
-                pos_rank_bias = recipe_descript
+            # Handle all reamining shared filters input to the pipeline ---------------------------
 
-            if recipe_dislike not in [None,'']:  # Add negative bias to ranking step
-                exclude_traits.append((recipe_dislike,profile_w))
-                neg_rank_bias = recipe_dislike
+            # Check whether we are testing chunk data only, then we need to filter the list of recipe ID
+            # and user ID in related chunk data, as as Chroma vectorstore might return ID out of ID mapping
+            # of testing models.
+            if _app_data['chunk_test']:
+                limit_user_ids = _app_data['user_reviews']["user_id"].unique().tolist()
+            else:
+                limit_user_ids = None
 
-            # Create search query
-            query = """
-            The recipe name:{}.
-            Extra info:
-            {}
-            """
-            query = query.format(recipe_name,recipe_descript)
+            user_profile = USER_SEARCH_TEMPLATE.format(
+                profile_dict.get("cuisine_select",[]),
+                profile_dict.get("cooking_method_select",[]),
+                profile_dict.get("difficulty_select",[]),
+                profile_dict.get("protein_select",[]),
+                profile_dict.get("fiber_select",[]),
+                profile_dict.get("fat_select",[]),
+                profile_dict.get("carbohydrate_select",[]),
+                profile_dict.get("sodium_select",[])
+            )
+            include_traits.append(
+                (user_profile,profile_w)  # Add User Profile bias for collaboration search
+            )
 
-        else:
-            notifi = message_pop("Not supported","Current URL isn't supported, please switch page")
-            return None,recommendation_data,notifi
-        
-        # Handle all reamining shared filters input to the pipeline ---------------------------
+            # Logic to add Chroma search operator based on exact filters
+            filter_df = pd.DataFrame(filter_dict)
 
-        # Check whether we are testing chunk data only, then we need to filter the list of recipe ID
-        # and user ID in related chunk data, as as Chroma vectorstore might return ID out of ID mapping
-        # of testing models.
-        if _app_data['chunk_test']:
-            limit_user_ids = _app_data['user_reviews']["user_id"].unique().tolist()
-        else:
-            limit_user_ids = None
+            # Check condition to limit amount of selected items
+            if not filter_df.empty:
+                if 'like_ingredient' in filter_df['filter_name'].values:
+                    n = len(filter_df.loc[filter_df['filter_name']=='like_ingredient','filter_value'].values[0])
+                    if n > 20:
+                        notifi = message_pop("Memory overload","Please select less preferred ingredients, limit is 20.")
+                        return None,recommendation_data,notifi
+                if 'dislike_ingredient' in filter_df['filter_name'].values:
+                    n = len(filter_df.loc[filter_df['filter_name']=='dislike_ingredient'].values[0])
+                    if n > 20:
+                        notifi = message_pop("Memory overload","Please select less preferred ingredients, limit is 20.")
+                        return None,recommendation_data,notifi
+                    
+            # Create filter operators for Chroma vectorstore
+            operator_type_mapping = dict(
+                filter_name = list(OPERATOR_MAPPING.keys()),
+                operator_type = list(OPERATOR_MAPPING.values())
+            )
+            if filter_df.empty:
+                filter_operators = None
+            else:
+                filter_operators = chroma_filter_operator(filter_df,operator_type_mapping,DASH_ID_2_DATA_v2)
+                filter_operators = None if filter_operators == {} else filter_operators
 
-        user_profile = USER_SEARCH_TEMPLATE.format(
-            profile_dict.get("cuisine_select",[]),
-            profile_dict.get("cooking_method_select",[]),
-            profile_dict.get("difficulty_select",[]),
-            profile_dict.get("protein_select",[]),
-            profile_dict.get("fiber_select",[]),
-            profile_dict.get("fat_select",[]),
-            profile_dict.get("carbohydrate_select",[]),
-            profile_dict.get("sodium_select",[])
-        )
-        include_traits.append(
-            (user_profile,profile_w)  # Add User Profile bias for collaboration search
-        )
+            # Logic to add extra priority trait to query embedding
+            trait_df = filter_df
+            if not trait_df.empty:
+                trait_df = trait_df.loc[
+                    (~(filter_df['filter_value'].isin([None,[]]))) & 
+                    (filter_df['priority_type']=='priority')
+                ]
+            for _,row in trait_df.iterrows():  
+                include_traits.append((
+                    TRAIT_MAPPING[row['filter_name']].format(row['filter_value']),
+                    filters_w
+                ))
 
-        # Logic to add Chroma search operator based on exact filters
-        filter_df = pd.DataFrame(filter_dict)
+            if health_w > 0: # weighted rerank score based on healthy score
+                min_max = constraint_df.loc[constraint_df['feature']=='who_score','value'].tolist()[0]
+                weighted_rank_config = {
+                    "ranker_weight": 1-health_w,
+                    "feature_weight": health_w,
+                    "feature_name": health_name,
+                    "feature_min": min_max[0],
+                    "feature_max": min_max[1]
+                }
 
-        # Check condition to limit amount of selected items
-        if not filter_df.empty:
-            if 'like_ingredient' in filter_df['filter_name'].values:
-                n = len(filter_df.loc[filter_df['filter_name']=='like_ingredient','filter_value'].values[0])
-                if n > 20:
-                    notifi = message_pop("Memory overload","Please select less preferred ingredients, limit is 20.")
-                    return None,recommendation_data,notifi
-            if 'dislike_ingredient' in filter_df['filter_name'].values:
-                n = len(filter_df.loc[filter_df['filter_name']=='dislike_ingredient'].values[0])
-                if n > 20:
-                    notifi = message_pop("Memory overload","Please select less preferred ingredients, limit is 20.")
-                    return None,recommendation_data,notifi
-                
-        # Create filter operators for Chroma vectorstore
-        operator_type_mapping = dict(
-            filter_name = list(OPERATOR_MAPPING.keys()),
-            operator_type = list(OPERATOR_MAPPING.values())
-        )
-        if filter_df.empty:
-            filter_operators = None
-        else:
-            filter_operators = chroma_filter_operator(filter_df,operator_type_mapping,DASH_ID_2_DATA_v2)
-            filter_operators = None if filter_operators == {} else filter_operators
+            query_df,rank_df = recommendation_doc_id_pipeline(
+                data_df = _app_data["recipe_df"],
+                vectorstore = _app_data["vectorstore"],
+                rank_model = _app_data["reranker"],
+                query = query,
+                filters = filter_operators,
+                dataset = _app_data['dataset'],
+                user_profile = user_profile,
+                user_vectorstore = _app_data["user_vectorstore"],
+                recommendation_model = _app_data[rec_model],
+                embedding_model = _app_data["embedding_model"],
+                model_type = rec_model,
+                add_biases = include_traits,
+                remove_biases = exclude_traits,
+                candidate = n_candidate,
+                n_recommendations = n_recommendations,
+                n_user = n_user,
+                n_rank = n_rank,
+                pos_rank_bias = pos_rank_bias,
+                neg_rank_bias = neg_rank_bias,
+                ranker_bias_weight = ranker_bias_w,
+                weighted_rank_config = weighted_rank_config if health_w > 0 else None,
+                limit_user_ids = limit_user_ids,
+                random_state = 0
+            )
 
-        # Logic to add extra priority trait to query embedding
-        trait_df = filter_df
-        if not trait_df.empty:
-            trait_df = trait_df.loc[
-                (~(filter_df['filter_value'].isin([None,[]]))) & 
-                (filter_df['priority_type']=='priority')
-            ]
-        for _,row in trait_df.iterrows():  
-            include_traits.append((
-                TRAIT_MAPPING[row['filter_name']].format(row['filter_value']),
-                filters_w
-            ))
+            if rank_df.shape[0] == 0:
+                notifi = message_pop("Search result","No match found for the given query & filters")
+                return None,recommendation_data,notifi
+            
+            # Generate statistic for recipe cards and search summary
+            if n_top + n_bottom >= rank_df.shape[0]:
+                display_df = rank_df.copy()
+            else:
+                combined_indices = np.r_[0:n_top, -n_bottom:0]  # Output top + bottom recommendation
+                display_df = rank_df.iloc[combined_indices]
 
-        if health_w > 0: # weighted rerank score based on healthy score
-            min_max = constraint_df.loc[constraint_df['feature']=='who_score','value'].tolist()[0]
-            weighted_rank_config = {
-                "ranker_weight": 1-health_w,
-                "feature_weight": health_w,
-                "feature_name": health_name,
-                "feature_min": min_max[0],
-                "feature_max": min_max[1]
+            recipe_statistics = generate_recipe_statistic(filter_dict,_app_data['recipe_df'],_app_data['url_df'],display_df)
+            rank_list = list(display_df.index)
+            recommendation_data["recipe_statistics"] = recipe_statistics
+
+            recommendation_data['pipeline_info'] = query_df.to_dict()  # save pipeline info for visualization
+
+            # Calculate some statistic for the all query recommendations
+            
+            metric_df = rank_df.merge(_app_data['recipe_df'][[ITEM,'fsa_score','who_score']],how='left',on=ITEM)
+            rec_embeddings = rank_df['page_content'].apply(_app_data["embedding_model"].embed_query)
+            rec_embeddings = np.array(rec_embeddings.tolist())
+
+            diversity_score = np.round(calculate_ild(rec_embeddings),4)
+            avg_relevent_score = np.round(float(rank_df['relevance_score'].mean()),4)
+            avg_fsa_score = np.round(metric_df['fsa_score'].mean(),4)
+            avg_who_score = np.round(metric_df['who_score'].mean(),4)
+
+            recommendation_data["model_statistics"] = {
+                "avg_relevent_score":avg_relevent_score,
+                "diversity_score":diversity_score,
+                "avg_fsa_score":avg_fsa_score,
+                "avg_who_score":avg_who_score
             }
+            ###
 
-        query_df,rank_df = recommendation_doc_id_pipeline(
-            data_df = _app_data["recipe_df"],
-            vectorstore = _app_data["vectorstore"],
-            rank_model = _app_data["reranker"],
-            query = query,
-            filters = filter_operators,
-            dataset = _app_data['dataset'],
-            user_profile = user_profile,
-            user_vectorstore = _app_data["user_vectorstore"],
-            recommendation_model = _app_data[rec_model],
-            embedding_model = _app_data["embedding_model"],
-            model_type = rec_model,
-            add_biases = include_traits,
-            remove_biases = exclude_traits,
-            candidate = n_candidate,
-            n_recommendations = n_recommendations,
-            n_user = n_user,
-            n_rank = n_recommendations,
-            pos_rank_bias = pos_rank_bias,
-            neg_rank_bias = neg_rank_bias,
-            ranker_bias_weight = ranker_bias_w,
-            weighted_rank_config = weighted_rank_config if health_w > 0 else None,
-            limit_user_ids = limit_user_ids,
-            random_state = 0
-        )
-
-        if rank_df.shape[0] == 0:
-            notifi = message_pop("Search result","No match found for the given query & filters")
-            return None,recommendation_data,notifi
-        
-        # Generate statistic for recipe cards and search summary
-        if n_top + n_bottom >= rank_df.shape[0]:
-            display_df = rank_df.copy()
-        else:
-            combined_indices = np.r_[0:n_top, -n_bottom:0]  # Output top + bottom recommendation
-            display_df = rank_df.iloc[combined_indices]
-
-        recipe_statistics = generate_recipe_statistic(filter_dict,_app_data['recipe_df'],_app_data['url_df'],display_df)
-        rank_list = list(display_df.index)
-        recommendation_data["recipe_statistics"] = recipe_statistics
-
-        #TODO: logic to create recommendation model statistics over the list of recommended items
-        
-        health_score = round(np.random.rand(),3)
-        diveristy_score = round(np.random.rand(),3)
-        serendipity_score = round(np.random.rand(),3)
-        precision_score =  round(np.random.rand(),3)
-        recommendation_data["model_statistics"] = {
-            "average_health_score":health_score,
-            "diversity_score":diveristy_score,
-            "serendipity_score":serendipity_score,
-            "Average Precision@k":precision_score
-        }
-        ###
-
-        recommendations = html.Div([
-            dmc.Text('Recommendation statistics', fw=700,size="lg"),
-            dmc.Text(f'Average health score: {health_score}'),
-            dmc.Text(f'Diversity score: {diveristy_score}'),
-            dmc.Text(f'Serendipity score: {serendipity_score}'),
-            dmc.Text(f'Average Precision@k: {precision_score}'),
-            html.Hr(),
-            dmc.Group(
-                children=[recommendation_card(item,rank) for rank,item in zip(rank_list,recipe_statistics)],
-                gap="xs",     
-                wrap="wrap",
-                justify="flex-start")
+            rec_output_template = html.Div([
+                dmc.Text('Recommendation statistics', fw=700,size="lg"),
+                dmc.Text(f'Diversity score: {diversity_score}'),
+                dmc.Text(f'Average FSA health score: {avg_fsa_score}'),
+                dmc.Text(f'Average WHO health score: {avg_who_score}'),
+                dmc.Text(f'Average document score: {avg_relevent_score}'),
                 
-        ])
+                # Visualization settings
+                dmc.Divider(label="Visualization setting",size="sm"),
+                dbc.Row([
+                    dbc.Col(
+                        [   
+                            dmc.Text('Choose feature to plot'),
+                            dcc.Dropdown(
+                                ITEM_CAT_FEATURES,
+                                value = ITEM_CAT_FEATURES[0],
+                                id=f"{search_id}_plot_feature",
+                                className="w-75")
+                        ],
+                        width=4
+                    ),
+                    dbc.Col(
+                        [   
+                            dmc.Text('Choose plot type'),
+                            dcc.Dropdown(
+                                ['sankey','bar'],
+                                value = 'sankey',
+                                id=f"{search_id}_plot_type",
+                                className="w-75")
+                        ],
+                        width=4
+                    ),
+                    dbc.Col(
+                        [   
+                            dmc.NumberInput(
+                                label = "Number of top label to keep",
+                                id = f"{search_id}_plot_keep",
+                                min=2, max=20,value=10, className="w-75"
+                            )
+                        ],
+                        width=4
+                    )
+                ]),
+                dbc.Switch(
+                    id=f"{search_id}_plot_log",
+                    label="Log the count value",
+                    value=False,
+                ),
+                dbc.Button("Visualize", id = f"{search_id}_plot", color="primary", className="my-3 w-25",n_clicks = 0),
+                dbc.Tooltip(
+                    "Visualiza how the labels change through each step in the pipeline",
+                    target=f"{search_id}_plot"
+                ),
 
-        return recommendations,recommendation_data,dash.no_update
+                html.Hr(),
+                # Recipe cards
+                dmc.Group(
+                    children=[recommendation_card(item,rank) for rank,item in zip(rank_list,recipe_statistics)],
+                    gap="xs",     
+                    wrap="wrap",
+                    justify="flex-start"
+                )
+            ])
+
+            return rec_output_template,recommendation_data,dash.no_update
         
+        except Exception as error:
+            print(error)
+            notifi = message_pop("Error","Something went wrong during the pipeline execution.")
+            return None,{},notifi
+
+    @callback(
+        Output(f"{search_id}_recommendation_outputs","children",allow_duplicate=True),
+        Input('url',"pathname"),
+        prevent_initial_call = True
+    )
+    def clear_when_switch_page(_):
+        return []
+
+    @callback(
+        Output(f"{search_id}_visualization_modal","is_open"),
+        Output(f"{search_id}_visualization_modal_body","children"),
+        Input(f"{search_id}_plot","n_clicks"),
+        State(f"{search_id}_info_modal","is_open"),
+        State(f"{search_id}_plot_feature","value"),
+        State(f"{search_id}_plot_type","value"),
+        State(f"{search_id}_plot_keep","value"),
+        State(f"{search_id}_plot_log","value"),
+        State(f"{search_id}_recommendation_store","data"),
+        prevent_initial_call = True
+    )
+    def plot_label_flow(click,is_open,feature,plot_type,n_keep,is_log,rec_data):
+        """
+        Support visualization to show how the pipeline label change after each step, good for bias checking.
+        """
+        if click == 0:  # handlle intial state of buttons
+            return dash.no_update, dash.no_update
+        else:
+            plot_df = pd.DataFrame(rec_data['pipeline_info'])
+            plot_df = plot_df.merge(_app_data['recipe_df'][[ITEM,feature]],how='left',on=ITEM)
+            explode = feature in EXPLODE_ITEM_FEATURES
+
+            if plot_type == 'bar':
+                fig = px.histogram(
+                    keep_n_labels(plot_df,feature,explode,n_keep), 
+                    x=feature,
+                    color='pipeline_step', barmode='group',log_y=is_log,
+                    height=600,
+                    width=1000,
+                    title=f'Top {n_keep} labels after recommendation pipeline'
+                )
+                fig.update_xaxes(categoryorder='total descending')
+
+                return not is_open,dcc.Graph(figure=fig)
+            else:
+                fig = sankey_plot(
+                    keep_n_labels(plot_df,feature,explode,n_keep),
+                    feature,f"Sankey plot for top {n_keep} labels",is_log
+                )
+                return not is_open,dcc.Graph(figure=fig)
+            
     @callback(
         Output(f"{search_id}_info_modal","is_open"),
         Output(f"{search_id}_info_modal_body","children"),
