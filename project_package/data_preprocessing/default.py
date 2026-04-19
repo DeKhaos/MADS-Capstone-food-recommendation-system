@@ -17,6 +17,14 @@ RECIPE_TO_USE = [
     "WHO_Score","FSA_Score"
 
 ]
+RECIPE_URL_TO_USE = [
+    "RecipeId","source","Name","Images","RecipeInstructions","Calories",
+    "ingredients_canonical_final_le_5_replace",
+    "PrepTime_Minutes",
+    "CookTime_Minutes","TotalTime_Minutes",
+    "WHO_Score","FSA_Score"
+
+]
 REVIEW_TO_USE = [
     "AuthorId","RecipeId","source","Rating","DateModified"
 ]
@@ -31,7 +39,8 @@ RECIPE_COLUMN_MAPPING = {
     "CookTime_Minutes":"cook_time",
     "TotalTime_Minutes":"total_time",
     "WHO_Score":"who_score",
-    "FSA_Score":"fsa_score"
+    "FSA_Score":"fsa_score",
+    "Images":"image_url"
 }
 
 REVIEW_COLUMN_MAPPING = {
@@ -137,21 +146,21 @@ USER_META_COLS = [
 #CHROMA vectorstore filter mapping --------------------------------------------------------------
 
 OPERATOR_MAPPING = dict(
-    cuisine = '$in',
-    cooking_method = '$or:$contains',
-    difficulty = '$in',
+    cuisine_type = '$in',
+    cook_method = '$or:$contains',
+    difficulty_level = '$in',
     like_ingredient = '$or:$contains',
     dislike_ingredient = '$and:$not_contains',
-    calories = '$range',
-    prep_time = '$range', 
-    cook_time = '$range', 
-    total_time = '$range',
+    calorie = '$range',
+    prepare_time = '$range', 
+    cooking_time = '$range', 
+    total_cook_time = '$range',
     who_score = '$range',
     fsa_score = '$range',
     protein_content = '$in',
     fiber_content = '$in',
     fat_content = '$in',
-    carbohydrate_content = '$in',
+    cab_content = '$in',
     sodium_content = '$in'
 )
 
@@ -165,6 +174,46 @@ TRAIT_MAPPING = dict(
     fat_content = "Fat content is {}.",
     cab_content = "Carbohydrate content is {}.",
     sodium_content = "Sodium content is {}."
+)
+
+#Mapping dash component ID to dataset feature name --------------------------------------------------------------
+
+DASH_ID_2_DATA = dict(
+    cuisine_type = "cuisine",
+    cook_method = "cooking_method",
+    difficulty_level = "difficulty",
+    like_ingredient = "ingredients",
+    dislike_ingredient = "ingredients",
+    calorie = "calories",
+    prepare_time = "prep_time",
+    cooking_time = "cook_time",
+    total_cook_time = "total_time",
+    who_score = "who_score",
+    fsa_score = "fsa_score",
+    protein_content = "protein_content",
+    fiber_content = "fiber_content",
+    fat_content = "fat_content",
+    cab_content = "carbohydrate_content",
+    sodium_content = "sodium_content"
+)
+#v2 use for chroma operation mapping to fix some conflict for multile 'ingredients' filters
+DASH_ID_2_DATA_v2 = dict(
+    cuisine_type = "cuisine",
+    cook_method = "cooking_method",
+    difficulty_level = "difficulty",
+    like_ingredient = "ingredients1",
+    dislike_ingredient = "ingredients2",
+    calorie = "calories",
+    prepare_time = "prep_time",
+    cooking_time = "cook_time",
+    total_cook_time = "total_time",
+    who_score = "who_score",
+    fsa_score = "fsa_score",
+    protein_content = "protein_content",
+    fiber_content = "fiber_content",
+    fat_content = "fat_content",
+    cab_content = "carbohydrate_content",
+    sodium_content = "sodium_content"
 )
 
 # DEFAULT FOR TESTING PURPOSE  --------------------------------------------------------------
