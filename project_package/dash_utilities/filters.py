@@ -9,15 +9,14 @@ import pandas as pd
 import numpy as np
 import json
 
-from .modals import recommendation_card,recipe_info_modal,recipe_statistic_modal
-from .dummy_data import generate_recipe_statistic
+from .modals import recommendation_card,recipe_info_modal
 from ..data_preprocessing.utils import chroma_filter_operator
-from ..data_preprocessing.default import USER_SEARCH_TEMPLATE,OPERATOR_MAPPING,TRAIT_MAPPING
-from ..modeling.recommendation_utils import recommendation_doc_id_pipeline
+from ..data_preprocessing.default import USER_SEARCH_TEMPLATE,OPERATOR_MAPPING,TRAIT_MAPPING,DASH_ID_2_DATA_v2
+from ..modeling.recommendation_utils import recommendation_doc_id_pipeline,generate_recipe_statistic
 from .in_memory_variables import (
     _app_data
     )
-
+from ..aws.data_access import build_s3_client,fetch_s3_bytes
 
 root_directory = Path(os.getcwd())
 
@@ -204,6 +203,7 @@ def shared_filters(trigger_id, store_id):
                 dbc.Collapse(
                     dcc.Dropdown(
                         like_ingredients,
+                        value = [],
                         id={"filter": "filter_dropdown", "name": "like_ingredient"},
                         multi=True,
                         maxHeight=300,
@@ -218,6 +218,7 @@ def shared_filters(trigger_id, store_id):
                 dbc.Collapse(
                     dcc.Dropdown(
                         dislike_ingredients,
+                        value = [],
                         id={"filter": "filter_dropdown", "name": "dislike_ingredient"},
                         multi=True,
                         maxHeight=300,
@@ -577,7 +578,7 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
             
             # Recommendation output modals
             recipe_info_modal(search_id),
-            recipe_statistic_modal(search_id),
+            # recipe_statistic_modal(search_id),
             
             html.Hr(),
             dmc.Text("Search pipeline settings:", size="xl", fw=700, td="underline"),
@@ -588,7 +589,7 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
                             dmc.NumberInput(
                                 label = "Number of candidate:",
                                 id = f"{search_id}_candidate",
-                                min=200, max=2000,value=300, className="w-75"
+                                min=200, max=2000,value=200, className="w-75"
                             ),
                             dbc.Tooltip(
                                 "Number of candidate retrieved from Chroma vectorstore",
@@ -676,7 +677,7 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
                                     {"label": "LightFM", "value": "hybrid",
                                      "label_id":f"{search_id}_hybrid_tooltip"}
                                 ],
-                                value="item-content",
+                                value="hybrid",
                                 id=f"{search_id}_rec_model_switch",
                                 inline=True,
                                 className="mb-1"
@@ -831,7 +832,21 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
             ),
 
             html.Hr(),
-            dcc.Loading(html.Div(id=f'{search_id}_recommendation_outputs')),
+            dcc.Loading(
+                html.Div(id=f'{search_id}_recommendation_outputs'),
+                custom_spinner = html.Div(
+                    [
+                        dbc.Spinner(color="primary", type="grow"),
+                        dbc.Spinner(color="secondary", type="grow"),
+                        dbc.Spinner(color="success", type="grow"),
+                        dbc.Spinner(color="warning", type="grow"),
+                        dbc.Spinner(color="danger", type="grow"),
+                        dbc.Spinner(color="info", type="grow"),
+                        dbc.Spinner(color="dark", type="grow"),
+                        dbc.Spinner(color="light", type="grow"),
+                    ]
+                )
+            ),
             html.Br()
         ],
         className="m-2 dbc",
@@ -897,6 +912,16 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
         pos_rank_bias = None
         neg_rank_bias = None
 
+        # Popup message template
+        message_pop = lambda title,message:[dict(
+            title=title,
+            message=message,
+            color="red",
+            action="show",
+            autoClose=2000,
+            withCloseButton=True
+        )]
+
         # Handle input query and bias logics when switching pages ---------------------------
         if url == "text_search":
 
@@ -907,14 +932,7 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
             recipe_dislike = page_data["recipe_dislike"]
 
             if (recipe_name in ["",None]) and (recipe_descript in ["",None]) and (recipe_dislike in ["",None]):
-                notifi = [dict(
-                    title="Requirement",
-                    message="Please input recipe name/description for processing.",
-                    color="red",
-                    action="show",
-                    autoClose=2000,
-                    withCloseButton=True
-                )]
+                notifi = message_pop("Requirement","Please input recipe name/description for processing.")
 
                 return None,recommendation_data,notifi
             
@@ -934,14 +952,7 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
             query = query.format(recipe_name,recipe_descript)
 
         else:
-            notifi = [dict(
-                title="Not supported",
-                message="Current URL isn't supported, please switch page",
-                color="red",
-                action="show",
-                autoClose=2000,
-                withCloseButton=True
-            )]
+            notifi = message_pop("Not supported","Current URL isn't supported, please switch page")
             return None,recommendation_data,notifi
         
         # Handle all reamining shared filters input to the pipeline ---------------------------
@@ -970,14 +981,30 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
 
         # Logic to add Chroma search operator based on exact filters
         filter_df = pd.DataFrame(filter_dict)
-        type_mapping = dict(
+
+        # Check condition to limit amount of selected items
+        if not filter_df.empty:
+            if 'like_ingredient' in filter_df['filter_name'].values:
+                n = len(filter_df.loc[filter_df['filter_name']=='like_ingredient','filter_value'].values[0])
+                if n > 20:
+                    notifi = message_pop("Memory overload","Please select less preferred ingredients, limit is 20.")
+                    return None,recommendation_data,notifi
+            if 'dislike_ingredient' in filter_df['filter_name'].values:
+                n = len(filter_df.loc[filter_df['filter_name']=='dislike_ingredient'].values[0])
+                if n > 20:
+                    notifi = message_pop("Memory overload","Please select less preferred ingredients, limit is 20.")
+                    return None,recommendation_data,notifi
+                
+        # Create filter operators for Chroma vectorstore
+        operator_type_mapping = dict(
             filter_name = list(OPERATOR_MAPPING.keys()),
             operator_type = list(OPERATOR_MAPPING.values())
         )
         if filter_df.empty:
             filter_operators = None
         else:
-            filter_operators = chroma_filter_operator(filter_df,type_mapping)
+            filter_operators = chroma_filter_operator(filter_df,operator_type_mapping,DASH_ID_2_DATA_v2)
+            filter_operators = None if filter_operators == {} else filter_operators
 
         # Logic to add extra priority trait to query embedding
         trait_df = filter_df
@@ -1027,57 +1054,52 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
             limit_user_ids = limit_user_ids,
             random_state = 0
         )
-            
 
-        recommendation_data = {}
-        #PLACEHOLDER: Logic to generate recommendation and its statistics from database in the server
-        if filter_dict!={}:
-            # print(filter_dict)
-            # print(pd.DataFrame(filter_dict))
-            # print('====')
-            # print(profile_dict)
-            recipe_statistics = generate_recipe_statistic(filter_dict,profile_dict,n_candidate)
+        if rank_df.shape[0] == 0:
+            notifi = message_pop("Search result","No match found for the given query & filters")
+            return None,recommendation_data,notifi
+        
+        # Generate statistic for recipe cards and search summary
+        if n_top + n_bottom >= rank_df.shape[0]:
+            display_df = rank_df.copy()
+        else:
+            combined_indices = np.r_[0:n_top, -n_bottom:0]  # Output top + bottom recommendation
+            display_df = rank_df.iloc[combined_indices]
 
-            output_list = []  # Output top + bottom recommendation
-            output_list.extend(recipe_statistics[:n_top])
-            output_list.extend(recipe_statistics[-n_bottom:])
-            rank_list = list(range(1,1+n_top))
-            rank_list.extend(list(range(n_candidate+1-n_bottom,n_candidate+1)))
+        recipe_statistics = generate_recipe_statistic(filter_dict,_app_data['recipe_df'],_app_data['url_df'],display_df)
+        rank_list = list(display_df.index)
+        recommendation_data["recipe_statistics"] = recipe_statistics
 
-            recommendation_data["recipe_statistics"] = recipe_statistics
-
-            #TODO: logic to create recommendation model statistics over the list of recommended items
-            
-            health_score = round(np.random.rand(),3)
-            diveristy_score = round(np.random.rand(),3)
-            serendipity_score = round(np.random.rand(),3)
-            precision_score =  round(np.random.rand(),3)
-            recommendation_data["model_statistics"] = {
-                "average_health_score":health_score,
-                "diversity_score":diveristy_score,
-                "serendipity_score":serendipity_score,
-                "Average Precision@k":precision_score
-            }
+        #TODO: logic to create recommendation model statistics over the list of recommended items
+        
+        health_score = round(np.random.rand(),3)
+        diveristy_score = round(np.random.rand(),3)
+        serendipity_score = round(np.random.rand(),3)
+        precision_score =  round(np.random.rand(),3)
+        recommendation_data["model_statistics"] = {
+            "average_health_score":health_score,
+            "diversity_score":diveristy_score,
+            "serendipity_score":serendipity_score,
+            "Average Precision@k":precision_score
+        }
         ###
 
-            recommendations = html.Div([
-                dmc.Text('Recommendation statistics', fw=700,size="lg"),
-                dmc.Text(f'Average health score: {health_score}'),
-                dmc.Text(f'Diversity score: {diveristy_score}'),
-                dmc.Text(f'Serendipity score: {serendipity_score}'),
-                dmc.Text(f'Average Precision@k: {precision_score}'),
-                html.Hr(),
-                dmc.Group(
-                    children=[recommendation_card(item,rank) for rank,item in zip(rank_list,output_list)],
-                    gap="xs",     
-                    wrap="wrap",
-                    justify="flex-start")
-                    
-            ])
+        recommendations = html.Div([
+            dmc.Text('Recommendation statistics', fw=700,size="lg"),
+            dmc.Text(f'Average health score: {health_score}'),
+            dmc.Text(f'Diversity score: {diveristy_score}'),
+            dmc.Text(f'Serendipity score: {serendipity_score}'),
+            dmc.Text(f'Average Precision@k: {precision_score}'),
+            html.Hr(),
+            dmc.Group(
+                children=[recommendation_card(item,rank) for rank,item in zip(rank_list,recipe_statistics)],
+                gap="xs",     
+                wrap="wrap",
+                justify="flex-start")
+                
+        ])
 
-            return recommendations,recommendation_data,dash.no_update
-        else:
-            return [],recommendation_data,dash.no_update
+        return recommendations,recommendation_data,dash.no_update
         
     @callback(
         Output(f"{search_id}_info_modal","is_open"),
@@ -1103,73 +1125,158 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
             df = df.loc[df["recipe_id"] == recipe_id]
             recipe_name = df['recipe_name'].values[0]
 
-            recipe_information = dcc.Markdown(
-                f"""
-                ## {recipe_name} - ID: {recipe_id}
+            s3_available = False
+            try: 
+                s3_client = build_s3_client(
+                    os.environ['AWS_ACCESS_KEY'],
+                    os.environ['AWS_SECRET_KEY'],
+                    os.environ['AWS_SESSION_TOKEN']
+                )
+                s3_item = json.loads(fetch_s3_bytes(s3_client,f"recipes/{recipe_id}.json"))
+                data_df = pd.DataFrame([s3_item])
+                s3_available = True
+            except:  # not S3 connection not available get default data from repository
+                data_df = _app_data['recipe_df'].loc[_app_data['recipe_df']['recipe_id']==recipe_id]
 
-                <recipe description>
+            combined_text = []
 
-                ### Cooking instruction:
-                * Step 1
-                * Step 2
-                * Step 3
+            combined_text.extend([
+                dmc.Title(recipe_name),
+                dmc.Text(f"ID: {data_df['recipe_id'].values[0]}",fw = 700, c="blue"),
+                dmc.Divider(label="General information",color="red",size="sm"),
+                dmc.Group([
+                    dmc.Text('Cuisine:',fw=700),dmc.Text(data_df['cuisine'].values[0])
+                ]),
+                dmc.Group([
+                    dmc.Text('Difficulty:',fw=700),dmc.Text(data_df['difficulty'].values[0])
+                ])
+            ])
 
-                Category taggings: tag_1, tag_2, tag_3
+            if s3_available:
+                cook_methods = [dmc.Text('Cooking method:',fw=700)]
+                cook_methods.extend([
+                    dmc.Badge(item, variant="outline", color="violet") 
+                    for item in data_df['cooking_methods'].values[0]
+                ])
+                combined_text.append(
+                    dmc.Group(cook_methods)
+                )
+            else:
+                add_list = [dmc.Text('Cooking method:',fw=700)]
+                add_list.extend([
+                    dmc.Badge(item, variant="outline", color="pink") 
+                    for item in data_df['cooking_method'].values[0]
+                ])
+                combined_text.append(
+                    dmc.Group(add_list)
+                )
 
-                <Nutrient facts>
+            if s3_available:
+                add_list = [dmc.Text('Meal type:',fw=700)]
+                meal_type = data_df['meal_type'].values[0]
+                meal_type = [dmc.Badge(item, variant="outline", color="pink") for item in meal_type]
+                add_list.extend(meal_type)
+                combined_text.append(
+                    dmc.Group(add_list),
+                )
 
-                ...
-                """,
-                className="card-text"
-            )
+            if s3_available:
+                add_list = [dmc.Text('Allergens:',fw=700)]
+                allergens = data_df['allergens'].values[0]
+                allergens = [dmc.Badge(item, variant="filled", color="red") for item in allergens]
+                add_list.extend(allergens)
+                combined_text.append(
+                    dmc.Group(add_list),
+                )
+
+            combined_text.extend([
+                dmc.Divider(label="Cooking details",color="red",size="sm"),
+                dmc.Text("Instruction:",fw=700),
+                dmc.List(
+                    children = [dmc.ListItem(text) for text in data_df['instructions'].values[0] if text not in [',','']],
+                    type="unordered",
+                    withPadding=False
+                ),
+                dmc.Text("Ingredients:",fw=700),
+                dmc.Group(
+                    children=[
+                        dmc.Badge(item, variant="outline", color="blue") 
+                        for item in data_df['ingredients'].values[0]['canonical']
+                    ] if s3_available else
+                    [
+                        dmc.Badge(item, variant="outline", color="blue") 
+                        for item in data_df['ingredients'].values[0]
+                    ]
+                ),
+                dmc.Group([
+                    dmc.Text('Preparation time:',fw=700),dmc.Text(str(data_df['prep_time'].values[0]) + ' minutes')
+                ]),
+                dmc.Group([
+                    dmc.Text('Cooking time:',fw=700),dmc.Text(str(data_df['cook_time'].values[0]) + ' minutes')
+                ]),
+                dmc.Group([
+                    dmc.Text('Total time:',fw=700),dmc.Text(str(data_df['total_time'].values[0]) + ' minutes')
+                ]),
+
+                dmc.Divider(label="Nutrients",color="red",size="sm"),
+                dmc.Group([dmc.Text("Calorie:",fw=700),dmc.Text(str(data_df['calories'].values[0]) + ' kCal')]),
+                dmc.Group([dmc.Text("Protein:",fw=700),dmc.Text(data_df['protein_content'].values[0])]),
+                dmc.Group([dmc.Text("Fiber:",fw=700),dmc.Text(data_df['fiber_content'].values[0])]),
+                dmc.Group([dmc.Text("Fat:",fw=700),dmc.Text(data_df['carbohydrate_content'].values[0])]),
+                dmc.Group([dmc.Text("Carbon hydrate:",fw=700),dmc.Text(data_df['fat_content'].values[0])]),
+                dmc.Group([dmc.Text("Sodium:",fw=700),dmc.Text(data_df['sodium_content'].values[0])])
+            ])
+
+            recipe_information = html.Div(combined_text)
 
             return not is_open,recipe_information
         
-    @callback(
-        Output(f"{search_id}_stat_modal","is_open"),
-        Output(f"{search_id}_stat_modal_body","children"),
-        Input({"recipe_id":ALL,"type":"recipe_statistic"},"n_clicks"),
-        State(f"{search_id}_stat_modal","is_open"),
-        State(f"{search_id}_recommendation_store","data"),
-        prevent_initial_call = True
-    )
-    def display_recipe_statistic(clicks,is_open,rec_data):
-        """
-        Generate recommended recipe statistics card.
-        """
+    #TODO: Currently there is no recipe statistic
+    # @callback(
+    #     Output(f"{search_id}_stat_modal","is_open"),
+    #     Output(f"{search_id}_stat_modal_body","children"),
+    #     Input({"recipe_id":ALL,"type":"recipe_statistic"},"n_clicks"),
+    #     State(f"{search_id}_stat_modal","is_open"),
+    #     State(f"{search_id}_recommendation_store","data"),
+    #     prevent_initial_call = True
+    # )
+    # def display_recipe_statistic(clicks,is_open,rec_data):
+    #     """
+    #     Generate recommended recipe statistics card.
+    #     """
 
-        if sum(clicks) == 0:  # handlle intial state of buttons
-            return dash.no_update, dash.no_update
-        else:
-            recipe_id = dash.ctx.triggered_id["recipe_id"]
+    #     if sum(clicks) == 0:  # handlle intial state of buttons
+    #         return dash.no_update, dash.no_update
+    #     else:
+    #         recipe_id = dash.ctx.triggered_id["recipe_id"]
 
-            #TODO: retrieve recipe statistic using recipe_id from database
-            df = pd.DataFrame(rec_data["recipe_statistics"])
+    #         #TODO: retrieve recipe statistic using recipe_id from database
+    #         df = pd.DataFrame(rec_data["recipe_statistics"])
 
-            df = df.loc[df["recipe_id"] == recipe_id]
-            recipe_name = df['recipe_name'].values[0]
+    #         df = df.loc[df["recipe_id"] == recipe_id]
+    #         recipe_name = df['recipe_name'].values[0]
 
-            long_term = df['long_term'].values[0]
-            short_term = df['short_term'].values[0]
-            average_score = df['average_metric'].values[0]
+    #         long_term = df['long_term'].values[0]
+    #         short_term = df['short_term'].values[0]
+    #         average_score = df['relevance_score'].values[0]
 
-            recipe_information = dcc.Markdown(
-                f"""
-                ## {recipe_name} - ID: {recipe_id}
+    #         recipe_information = dcc.Markdown(
+    #             f"""
+    #             ## {recipe_name} - ID: {recipe_id}
                 
-                Evaluation matching scores:
+    #             Evaluation matching scores:
 
-                Long-term preference score: {round(long_term,3)}
+    #             Long-term preference score: {round(long_term,3)}
 
-                Short-term filters score: {round(short_term,3)}
+    #             Short-term filters score: {round(short_term,3)}
 
-                Average score: {round(average_score,3)}
+    #             Average score: {round(average_score,3)}
 
-                ...
-                """,
-                className="card-text"
-            )
+    #             ...
+    #             """,
+    #             className="card-text"
+    #         )
 
-            return not is_open,recipe_information
+    #         return not is_open,recipe_information
 
     return output_components
