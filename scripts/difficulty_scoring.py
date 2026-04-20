@@ -93,7 +93,7 @@ def classify_difficulty(score: float) -> str:
 
 
 def compute_recipe_difficulty(
-    total_time_minutes: Optional[float],
+    total_time_minutes: Optional[int],
     cooking_methods: Optional[List[str]],
     ingredients: Optional[List[str]],
 ) -> dict:
@@ -113,10 +113,4 @@ def compute_recipe_difficulty(
     difficulty_score = round(max(0, min(100, raw_score)), 2)
     difficulty_label = classify_difficulty(difficulty_score)
 
-    return {
-        "time_score": time_score,
-        "method_score": method_score,
-        "ingredient_score": ingredient_score,
-        "difficulty_score": difficulty_score,
-        "difficulty_label": difficulty_label,
-    }
+    return difficulty_label
