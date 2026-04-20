@@ -70,8 +70,9 @@ def load_recipe_data(
         recipe_df = load_chunks(root_directory / "data/processed/Recipes","recipes_chunk_*.csv",usecols=RECIPE_TO_USE)
     recipe_df.rename(columns = RECIPE_COLUMN_MAPPING,inplace=True)
 
-    recipe_df['ingredients'] = recipe_df['ingredients'].apply(ast.literal_eval)  # convert ingredient to list
-    recipe_df['instructions'] = recipe_df['instructions'].apply(ast.literal_eval)  # convert instructions to list
+    recipe_df['ingredients'] = recipe_df['ingredients'].fillna('[]').apply(ast.literal_eval)  # convert ingredient to list
+    recipe_df['instructions'] = recipe_df['instructions'].fillna('[]').apply(ast.literal_eval)  # convert instructions to list
+
     if not os.path.exists(root_directory / 'data/processed/recipes_generated_features.csv'):
         recipe_category_df = pandas_sql_df("SELECT * from RECIPES")
     else:
