@@ -677,7 +677,7 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
                             dmc.NumberInput(
                                 label = "Top n to retrieve:",
                                 id = f"{search_id}_n_top",
-                                min=1, max=20,value=5, className="w-75"
+                                min=1, max=50,value=5, className="w-75"
                             ),
                             dbc.Tooltip(
                                 """Retrieve n top recipe from the list of ranked 
@@ -692,7 +692,7 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
                             dmc.NumberInput(
                                 label = "Bottom n to retrieve:",
                                 id = f"{search_id}_n_bottom",
-                                min=1, max=10,value=3, className="w-75"
+                                min=1, max=20,value=3, className="w-75"
                             ),
                             dbc.Tooltip(
                                 """Retrieve n bottom recipe from the list of ranked 

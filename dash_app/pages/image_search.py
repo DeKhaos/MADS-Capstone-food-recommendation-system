@@ -95,6 +95,7 @@ layout = dmc.Stack(
     Output(f'{page_name}_prediction_collapse1',"is_open"),
     Output(f'{page_name}_prediction_collapse2',"is_open",allow_duplicate=True),
     Output(f'{page_name}_ingre_pred_container','children',allow_duplicate=True),
+    Output({"page":page_name,"type":"input_store"},"data",allow_duplicate=True),
     Input(f"{page_name}_upload_image", "contents"),
     prevent_initial_call = True
 )
@@ -111,8 +112,8 @@ def update_output(contents):
             fit="contain",
             alt="Uploaded recipe image"
         )
-        return img,True,False,None
-    return "",False,False,None
+        return img,True,False,None,{"ingredient_predictions":[]}
+    return "",False,False,None,{"ingredient_predictions":[]}
 
 @callback(
     Output(f'{page_name}_ingre_pred_container', "children"),
