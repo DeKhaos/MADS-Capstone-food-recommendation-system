@@ -65,7 +65,7 @@ def generate_recipe_statistic(
             recipe_template['recipe_name'] = str(np.random.choice(recipe_name,1)[0])
             recipe_template['long_term'] = np.random.rand()
             recipe_template['short_term'] = np.random.rand()
-            recipe_template['average_metric'] = 0.7*recipe_template['long_term'] + 0.3*recipe_template['short_term']
+            recipe_template['relevance_score'] = 0.7*recipe_template['long_term'] + 0.3*recipe_template['short_term']
 
             sample_df = filter_df.copy()
 
@@ -104,6 +104,6 @@ def generate_recipe_statistic(
 
         #TODO: generate match preference
 
-    recipe_list = sorted(recipe_list,key=lambda item_dict:item_dict['average_metric'],reverse=True)
+    recipe_list = sorted(recipe_list,key=lambda item_dict:item_dict['relevance_score'],reverse=True)
 
     return recipe_list
