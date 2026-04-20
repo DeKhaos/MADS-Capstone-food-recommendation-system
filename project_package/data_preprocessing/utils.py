@@ -233,6 +233,8 @@ def chroma_filter_operator(
     
     if len(filter_operators) == 1:
         filter_operators = filter_operators[0]
+    elif len(filter_operators) == 0:
+        filter_operators = {}
     else:
         filter_operators = {"$and":filter_operators}  # each distinct filter operators must match
     

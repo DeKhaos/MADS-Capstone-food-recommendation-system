@@ -69,7 +69,6 @@ app.layout = dmc.MantineProvider(
         dbc.NavbarSimple(
             [
                 dbc.NavItem(dbc.NavLink("Recipe name search", href="/text_search",active="exact")),
-                dbc.NavItem(dbc.NavLink("Recipe instruction search", href="/description_search",active="exact")),
                 dbc.NavItem(dbc.NavLink("Recipe Image search", href="/image_search",active="exact"))
             ],
             links_left = True,
