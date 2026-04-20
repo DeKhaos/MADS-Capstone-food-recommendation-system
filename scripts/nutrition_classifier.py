@@ -61,7 +61,7 @@ def classify_protein_grams(value_per_serving: Any) -> str:
         return NUTRITION_UNKNOWN
     if x < 10:
         return NUTRITION_LOW
-    if x < 20:
+    if x < 30:
         return NUTRITION_MEDIUM
     return NUTRITION_HIGH
 
