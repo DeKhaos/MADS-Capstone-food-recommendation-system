@@ -531,34 +531,47 @@ def recommendation_card(
     recipe_id = item['recipe_id']
     recipe_name = item['recipe_name']
     recipe_badges = item['badges']
-    recipe_score = round(item['average_metric'],4)
+    recipe_score = round(float(item['relevance_score']),4)
+    recipe_fsa_score = item['fsa_score']
+    recipe_who_score = item['who_score']
+    recipe_img_url = item['image_url']
 
     card = dbc.Card(
         [
             dbc.CardHeader(
                 dmc.Image(
                     radius="md",
-                    # h=100,
+                    h=200,
                     # w="100%",
                     fit="cover",
+                    src=recipe_img_url,
                     # src="https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/images/bg-9.png",
-                    fallbackSrc="https://placehold.co/600x400?text=Placeholder"  # PLACEHOLDER for image
+                    fallbackSrc="https://placehold.co/600x400?text=No+Image"  # PLACEHOLDER for image
+                    
                 ),
                 className="p-1"
             ),
             dbc.CardBody(
                 [   
-                    #TODO: More information might be added here
-                    html.H3(recipe_name, className="card-title"),
-                    html.H5(f'ID #{recipe_id}', className="card-title"),
-                    html.H6(f"RANK #{rank} - score:{recipe_score}"),
+                    #PLACEHOLDER: More information might be added here
+                    html.H3(recipe_name, className="card-title",
+                            style={
+                                # "height": "3.6em",     # Exactly 2 lines of text
+                                "height": "1em",
+                                "overflow": "hidden"}
+                            ),
+                    html.H5(f'ID: {recipe_id}', className="card-title"),
+                    html.H6(f"RANK: {rank} - Score: {recipe_score}"),
+                    html.H6(f"FSA score: {recipe_fsa_score} - WHO score: {recipe_who_score}"),
                     badge_list(recipe_badges)
                 ]
             ),
             dbc.CardFooter([
                 dmc.Group(
                     [dbc.Button('Recipe info',size='sm',id = {"recipe_id":recipe_id,"type":"recipe_info"},n_clicks=0),
-                    dbc.Button('Statistics',size='sm',id = {"recipe_id":recipe_id,"type":"recipe_statistic"},n_clicks=0)],
+                    #TODO: Currently there is no recipe statistic
+                    # dbc.Button('Statistics',size='sm',id = {"recipe_id":recipe_id,"type":"recipe_statistic"},n_clicks=0)
+                    ],
                     justify="flex-start"
                 )
             ]),
@@ -611,6 +624,30 @@ def recipe_statistic_modal(search_id:str):
         id=f"{search_id}_stat_modal",
         children=[dbc.ModalHeader("Recipe statistics"), dbc.ModalBody(id=f"{search_id}_stat_modal_body")],
         is_open=False
+    )
+    return component
+
+def visualization_modal(search_id:str):
+    """
+    A popup recipe statistic modal.
+
+    Parameters
+    ----------
+
+    search_id: str
+        The id of the search button.
+
+    Returns
+    ----------
+
+    component: dash component
+        The popup modal.
+    """
+    component = dbc.Modal(
+        id=f"{search_id}_visualization_modal",
+        children=[dbc.ModalHeader("Visualization"), dbc.ModalBody(id=f"{search_id}_visualization_modal_body")],
+        is_open=False,
+        size='xl'
     )
     return component
 

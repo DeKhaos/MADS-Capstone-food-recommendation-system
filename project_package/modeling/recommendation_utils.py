@@ -1,4 +1,5 @@
 import os
+import ast
 import warnings
 from dotenv import load_dotenv
 from typing import Union,List,Tuple,Literal
@@ -12,7 +13,7 @@ from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
 import numpy as np
 import pandas as pd
-from sklearn.metrics.pairwise import paired_cosine_distances
+from sklearn.metrics.pairwise import paired_cosine_distances,cosine_distances
 from rectools import ExternalIds
 from rectools.metrics.distances import PairwiseDistanceCalculator
 from rectools.metrics import (
@@ -36,14 +37,7 @@ from flashrank import Ranker
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
-from project_package.data_preprocessing.default import (
-    USER,ITEM,RATING_COL,TIME_COL,
-    ITEM_CAT_FEATURES,USER_CAT_FEATURES,EXPLODE_ITEM_FEATURES,EXPLODE_USER_FEATURES,
-    ITEM_ALL_FEATURES,
-    USER_ML,ITEM_ML,RATING_ML_COL,
-    ML_ITEM_CAT_FEATURES,ML_USER_CAT_FEATURES,EXPLODE_ML_ITEM_FEATURES,EXPLODE_ML_USER_FEATURES,
-    ML_ITEM_ALL_FEATURES
-)
+from ..data_preprocessing.default import ITEM,ITEM_ML,DASH_ID_2_DATA
 
 load_dotenv()  # load variable from .env file
 
@@ -103,7 +97,25 @@ class PairwiseCosineDistanceCalculator(PairwiseDistanceCalculator):
         result[invalid_mask] = np.nan
         
         return result
+
+def calculate_ild(embeddings: np.ndarray):
+    """
+    Calculate Intra-List Diversity from embeddings vector.
+    """
+
+    # Compute the pairwise distance matrix
+    dist_matrix = cosine_distances(embeddings)
     
+    # Sum the distances (the matrix is symmetric, so we sum everything)
+    # and subtract the diagonal (which is always 0 distance to self)
+    n = dist_matrix.shape[0]
+    if n <= 1: return 0.0 # Diversity of 1 item is 0
+    
+    total_dist = np.sum(dist_matrix)
+    
+    # Average by the number of pairs (n * (n-1))
+    return total_dist / (n * (n - 1))
+
 def preprocessing_docs(
         documents: Union[list,str],
         remove_punctuation: bool = False
@@ -188,115 +200,6 @@ def generate_metric_objs(
     }
 
     return metrics
-
-def construct_rec_train_dataset(
-    user_reviews: pd.DataFrame,
-    item_metadata: pd.DataFrame = None,
-    user_preferences: pd.DataFrame = None,
-    use_test_cols: bool = False,
-    use_datetime: bool = False
-):
-    """
-    Construct Rectools formatted dataset to train the recommendation models.
-
-    Parameters
-    ----------
-
-    user_reviews: pd.DataFrame
-        Contain user ratings for the items.
-
-    item_metadata: pd.DataFrame
-        Contains features of items.
-
-    user_preferences: pd.DataFrame
-        Contain user preferences for the items
-
-    use_test_cols: bool
-        If True, use the MovieLens column mapping for testing.
-
-    use_datetime: bool
-        If True, use datetime column.
-
-    Returns
-    ----------
-    metrics: Dataset
-        Rectools dataset object.
-    """
-    
-    if use_test_cols:  # use MovieLens test data settings
-        in_itemCol = ITEM_ML
-        in_userCol = USER_ML
-        in_ratingCol = RATING_ML_COL
-        item_all = ML_ITEM_ALL_FEATURES
-        item_cats = ML_ITEM_CAT_FEATURES
-        user_cats = ML_USER_CAT_FEATURES
-        explode_item_cats = EXPLODE_ML_ITEM_FEATURES
-        explode_user_cats = EXPLODE_ML_USER_FEATURES
-        
-    else:
-        in_itemCol = ITEM
-        in_userCol = USER
-        in_ratingCol = RATING_COL
-        in_datetime = TIME_COL
-        item_all = ITEM_ALL_FEATURES
-        item_cats = ITEM_CAT_FEATURES
-        user_cats = USER_CAT_FEATURES
-        explode_item_cats = EXPLODE_ITEM_FEATURES
-        explode_user_cats = EXPLODE_USER_FEATURES
-
-    # rename features to match requirement in Rectools
-    if not use_datetime:
-        interactions = user_reviews.rename(columns = {
-            in_userCol:"user_id",
-            in_itemCol:"item_id", 
-            in_ratingCol:"weight"
-        })
-        interactions['datetime'] = -1 # assign a random value as we won't use this
-    else:
-        interactions = user_reviews.rename(columns = {
-            in_userCol:"user_id",
-            in_itemCol:"item_id", 
-            in_ratingCol:"weight",
-            in_datetime:"datetime"
-        })
-    if user_preferences is not None:
-        user_features = user_preferences.rename(columns={
-            in_userCol:"user_id"
-        })
-        # convert category features to long format
-        user_features = user_features[["user_id"] + user_cats]
-        for feature in explode_user_cats:
-            user_features = user_features.explode(feature)
-        user_features = pd.melt(user_features, id_vars='user_id', value_vars=user_cats,var_name="feature")
-        user_features.rename(columns={"user_id":"id"},inplace=True)
-    else:
-        user_features = None
-        user_cats = ()
-
-    if item_metadata is not None:
-        item_features = item_metadata.rename(columns={
-            in_itemCol:"item_id"
-        })
-        # convert category features to long format
-        item_features = item_features[["item_id"] + item_all]
-        for feature in explode_item_cats:
-            item_features = item_features.explode(feature)
-        item_features = pd.melt(item_features, id_vars='item_id', value_vars=item_all,var_name="feature")
-        item_features.rename(columns={"item_id":"id"},inplace=True)
-    else:
-        item_features = None
-        item_cats = ()
-
-    # create Rectools dataset with all user/item features and iteractions
-    dataset = Dataset.construct(
-        interactions_df=interactions,
-        user_features_df=user_features,
-        cat_user_features=user_cats,
-        item_features_df=item_features,
-        cat_item_features=item_cats,
-    )
-
-    return dataset
 
 def doc_template_fill_in(
     doc_template: str,
@@ -716,6 +619,7 @@ def recommendation_doc_id_pipeline(
     ranker_bias_weight: float = 0.35,
     weighted_rank_config: dict = None,
     toy_dataset: bool = False,
+    limit_user_ids: list = None,
     random_state: int = None
 ):
     """
@@ -804,6 +708,10 @@ def recommendation_doc_id_pipeline(
     toy_dataset: bool
         If True, using the toy dataset default key values.
 
+    limit_user_ids: list
+        Clarify the list of user ID so Chroma vectorstore will only return query results revolving
+        around these user ID, just in case for chunk test.
+        
     random_state: int
         Random seed for preproducibility.
             
@@ -814,6 +722,8 @@ def recommendation_doc_id_pipeline(
 
     score_df: pd.DataFrame
         The ranking score of the final recommendation items to show the users.
+    
+    NOTE: If at any step, the filtered result doesn't have any records, the pipeline will stop and return empty dataframes. 
     """
 
     # Checking pipeline condition upfront
@@ -875,8 +785,14 @@ def recommendation_doc_id_pipeline(
         ].copy()
 
         candidate_df['pipeline_step'] = 'candidate'
-
+        if candidate_df.shape[0] == 0:
+            return pd.DataFrame({}),pd.DataFrame({})
+        
     # Layer 2: recommendation
+
+    # limit result for chunk test
+    users_filter = {"user_id":{"$in":limit_user_ids}} if limit_user_ids is not None else None  
+
     if model_type =='item-content':
         tokenized_corpus = preprocessing_docs(result_docs)
         tokenized_query = preprocessing_docs(query)
@@ -890,7 +806,7 @@ def recommendation_doc_id_pipeline(
 
     elif model_type == 'collab':
         # Creating recommendation, collaboration is trained on entire dataset and it can only see items used in trained model
-        retrieved_users = user_vectorstore.similarity_search(user_profile,k=n_user)
+        retrieved_users = user_vectorstore.similarity_search(user_profile,k=n_user,filter=users_filter)
         match_user_ids = np.array([item.id for item in retrieved_users],dtype=int)
         
         model_recommendations = recommendation_model.recommend(
@@ -913,7 +829,7 @@ def recommendation_doc_id_pipeline(
 
     else: # hybrid
         # Creating recommendation, collaboration is trained on entire dataset and it can only see items used in trained model
-        retrieved_users = user_vectorstore.similarity_search(user_profile,k=n_user)
+        retrieved_users = user_vectorstore.similarity_search(user_profile,k=n_user,filter=users_filter)
         match_user_ids = np.array([item.id for item in retrieved_users],dtype=int)
 
         model_recommendations = recommendation_model.recommend(
@@ -933,7 +849,9 @@ def recommendation_doc_id_pipeline(
         [item_id] if features is None else [item_id] + features
     ].copy()
     rec_df['pipeline_step'] = 'recommendation'
-
+    if rec_df.shape[0] == 0:
+        return pd.DataFrame({}),pd.DataFrame({})
+    
     # Layer 3: Top n ranked
     doc_ids_map = dict(
         zip(range(len(top_n)),top_n.tolist())
@@ -980,6 +898,8 @@ def recommendation_doc_id_pipeline(
         score_df = score_df.merge(data_df[[item_id,f_name]],on=item_id,how='left')
 
         score_df[f_name] = (score_df[f_name] - f_min)/(f_max-f_min)  # normalize the feature to [0,1]
+        if f_name == 'fsa_score':  # because slow FSA score mean healthier recipe
+            score_df[f_name] = 1 - score_df[f_name]
         score_df['relevance_score'] = ranker_weight*score_df['relevance_score'] + f_weight*score_df[f_name]  # recaculate the ranker score
         score_df = score_df[[item_id,'relevance_score','page_content']]
         score_df = score_df.sort_values('relevance_score',ascending=False).reset_index(drop=True)
@@ -992,12 +912,12 @@ def recommendation_doc_id_pipeline(
     rank_df['pipeline_step'] = 'ranked'
 
     if include_fulldata:
-        if model_type == 'item-content':
+        if model_type in ['item-content','hybrid']:
             doc_id_df = pd.concat((pre_filt_df,candidate_df,rec_df,rank_df)).reset_index(drop=True)
         else:
             doc_id_df = pd.concat((pre_filt_df,rec_df,rank_df)).reset_index(drop=True)
     else:
-        if model_type == 'item-content':
+        if model_type in ['item-content','hybrid']:
             doc_id_df = pd.concat((candidate_df,rec_df,rank_df)).reset_index(drop=True)
         else:
             doc_id_df = pd.concat((rec_df,rank_df)).reset_index(drop=True)
@@ -1065,3 +985,75 @@ def generate_feature_constraint(
     constraint_df = pd.DataFrame(feature_dict)
     
     return constraint_df
+
+def generate_recipe_statistic(
+        filter_dict: dict,
+        recipe_df: pd.DataFrame,
+        url_df: pd.DataFrame,
+        rank_df: pd.DataFrame
+    ):
+    """
+    Generate recipe card information.
+
+    Parameters
+    ----------
+
+    filter_dict: dict
+        The stored filter values.
+
+    recipe_df: pd.DataFrame
+        The recipe metadata.
+
+    url_df: pd.DataFrame
+        Store the urls of the recipes.
+
+    rank_df: pd.DataFrame
+        Flashrank result
+
+    Returns
+    ----------
+
+    recipe_list: list[dict]
+        The list of generated recipe, each recipe is a dictionary with meta info.
+    """
+
+    filter_df = pd.DataFrame(filter_dict)
+    if filter_df.shape[0] != 0:
+        filter_df = filter_df.loc[~filter_df['filter_value'].isin([None,[]])]  # remove filters that have no selection
+
+    recipe_ids = rank_df[ITEM].tolist()
+    recipe_list = []
+
+    for recipe_id in recipe_ids:
+        recipe_template = {"badges":[]}  # badge will be list of tuple (filter_name,priority_type,filter_match)
+        recipe_template['recipe_id'] = int(recipe_id)
+        recipe_template['recipe_name'] = recipe_df.loc[recipe_df[ITEM]==recipe_id,"recipe_name"].values[0]
+        recipe_template['relevance_score'] = rank_df.loc[rank_df[ITEM]==recipe_id,"relevance_score"].values[0]
+        recipe_template['fsa_score'] = recipe_df.loc[recipe_df[ITEM]==recipe_id,"fsa_score"].values[0]
+        recipe_template['who_score'] = recipe_df.loc[recipe_df[ITEM]==recipe_id,"who_score"].values[0]
+        image_urls = ast.literal_eval(url_df.loc[url_df[ITEM]==recipe_id,"image_url"].values[0])
+        # choose a random URL if available in record
+        recipe_template['image_url'] = np.random.choice(image_urls,1)[0] if image_urls not in [None,[],''] else None  
+
+        if not filter_df.empty:
+            sample_df = filter_df.copy()
+            sample_df['filter_match'] = False  # Default set badge match to False
+            # any exact filter should be true (match withChroma)
+            sample_df.loc[(sample_df['priority_type'] == 'exact'),'filter_match'] = True  
+
+            for _,row in sample_df.loc[(sample_df['priority_type'] == 'priority')].copy().iterrows():  # iterate on a copy
+                filter_source = set(row['filter_value'])
+                if row['filter_name'] in ["like_ingredient","cook_method"]:  # data record is list type
+                    recipe_source = set(recipe_df.loc[recipe_df[ITEM]==recipe_id,DASH_ID_2_DATA[row['filter_name']]].values[0])
+                    is_match = len(filter_source.intersection(recipe_source)) > 0  # at least 1 common item
+                else:  # data record is str type
+                    recipe_source = recipe_df.loc[recipe_df[ITEM]==recipe_id,DASH_ID_2_DATA[row['filter_name']]].values[0]
+                    is_match = recipe_source in filter_source  # record value in filter list
+                sample_df.loc[sample_df['filter_name'] == row['filter_name'],'filter_match'] = is_match
+
+            for _,row in sample_df.iterrows():  # add badges to recipe
+                recipe_template['badges'].append((row['filter_name'],row['priority_type'],row['filter_match']))
+
+        recipe_list.append(recipe_template)
+
+    return recipe_list

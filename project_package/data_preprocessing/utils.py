@@ -208,12 +208,23 @@ def chroma_filter_operator(
                 ]
             }
         elif ':' in info["operator_type"]:  # handle logic for comparing a list of filter items with the record item list.
+            if 'ingredients' not in info["filter_name"]:  # check for like/dislike ingredients
+                filter_name = info["filter_name"]
+            else:  # if we have ingredient1,ingredient2 (like,dislike ingredients)
+                filter_name = 'ingredients'
+
             and_or_operator,contain_operator = info["operator_type"].split(":")
-            add_operators = {
-                and_or_operator:[
-                    {info["filter_name"]:{contain_operator:item}} for item in info["filter_value"]
-                ]
-            }
+            if len(info["filter_value"])>1:
+                add_operators = {
+                    and_or_operator:[
+                        {filter_name:{contain_operator:item}} for item in info["filter_value"]
+                    ]
+                }
+            else:  # if only 1 item in list, drop the 'and_or_operator
+                add_operators = {
+                    filter_name:{contain_operator:info["filter_value"][0]}
+                }
+
         else: # "$in|$nin"
             add_operators = {
                 info["filter_name"]:{info["operator_type"]:info["filter_value"]}
@@ -222,6 +233,8 @@ def chroma_filter_operator(
     
     if len(filter_operators) == 1:
         filter_operators = filter_operators[0]
+    elif len(filter_operators) == 0:
+        filter_operators = {}
     else:
         filter_operators = {"$and":filter_operators}  # each distinct filter operators must match
     
