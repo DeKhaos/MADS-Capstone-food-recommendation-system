@@ -119,12 +119,14 @@ def shared_filters(trigger_id, store_id):
     ######
 
     # lambda function for creating filter header
-    filter_header = lambda label,name,filter_type,exact="exact",disable_priority=False: dmc.Group(
+    filter_header = lambda label,name,filter_type,exact="exact",disable_priority=False,label_desc='': dmc.Group(
         [   
             dbc.Switch(id={"name": name,"type":"filter_control","filter":filter_type},value=False),
-            dmc.Text(label, fw=500, size="lg"), 
+            dmc.Text(label, fw=500, size="lg",id={"type":"filer_label","filter":filter_type,"name":name}),
+            dbc.Tooltip(label_desc,target={"type":"filer_label","filter":filter_type,"name":name}) 
+            if label_desc!='' else dbc.Tooltip(), 
             dbc.Collapse(
-                dbc.RadioItems(
+                [dbc.RadioItems(
                     options=[
                         {"label": "Exact filter", "value": "exact"},
                         {"label": "Priority filter", "value": "priority",'disabled':disable_priority},
@@ -133,6 +135,14 @@ def shared_filters(trigger_id, store_id):
                     id={"type": "exact_switch", "name": name,"filter":filter_type},
                     inline=True,
                 ),
+                dbc.Tooltip(
+                    """
+                    If Exact, filter only those values from the vector database.
+                    If Priority, guide the search directory toward the selected values.
+                    """,
+                    target={"type": "exact_switch", "name": name,"filter":filter_type}
+                )
+                ],
                 is_open=False,
                 id = {"name": name,"type":"filter_control","filter":filter_type,"collapse":0}
             )
@@ -204,7 +214,9 @@ def shared_filters(trigger_id, store_id):
                 ),
                 html.Hr(),
 
-                filter_header("Preferred ingredients","like_ingredient","filter_dropdown"),
+                filter_header(
+                    "Preferred ingredients","like_ingredient","filter_dropdown",
+                    label_desc="If Exact filter, try to find any recipes that have at least one of select ingredients."),
                 dbc.Collapse(
                     dcc.Dropdown(
                         like_ingredients,
@@ -219,7 +231,10 @@ def shared_filters(trigger_id, store_id):
                 ),
                 html.Hr(),
 
-                filter_header("Dislike ingredients","dislike_ingredient","filter_dropdown",disable_priority=True),
+                filter_header(
+                    "Dislike ingredients","dislike_ingredient","filter_dropdown",disable_priority=True,
+                    label_desc="If Exact filter, try to find recipes that don't have any of select ingredients."
+                ),
                 dbc.Collapse(
                     dcc.Dropdown(
                         dislike_ingredients,
@@ -297,7 +312,10 @@ def shared_filters(trigger_id, store_id):
                 ),
                 html.Hr(),
                 
-                filter_header("WHO health score","who_score","filter_slider",disable_priority=True),
+                filter_header(
+                    "WHO health score","who_score","filter_slider",disable_priority=True,
+                    label_desc="Recipes consider to be healthy if WHO score >= 2"
+                ),
                 dbc.Collapse(
                     dcc.RangeSlider(
                         min(who_score),
@@ -312,7 +330,10 @@ def shared_filters(trigger_id, store_id):
                 ),
                 html.Hr(),
 
-                filter_header("FSA health score","fsa_score","filter_slider",disable_priority=True),
+                filter_header(
+                    "FSA health score","fsa_score","filter_slider",disable_priority=True,
+                    label_desc="Recipes consider to be healthy if FSA score <= 4"
+                ),
                 dbc.Collapse(
                     dcc.RangeSlider(
                         min(fsa_score),
@@ -922,7 +943,7 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
             message=message,
             color="red",
             action="show",
-            autoClose=2000,
+            autoClose=2500,
             withCloseButton=True
         )]
 
@@ -971,7 +992,19 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
                 {}
                 """
                 query = query.format(recipe_name,recipe_descript)
+                
+            elif url == "image_search":
+                page_data = page_stores[idx]
+                recipe_ingredients = page_data["ingredient_predictions"]
 
+                if recipe_ingredients == []:
+                    notifi = message_pop("Error","No ingredient found from model prediction.")
+                    return None,recommendation_data,notifi
+                
+                else:
+                    ingre_list = [name for name, _ in recipe_ingredients]
+
+                    query = f"Ingredient list:\n{ingre_list}"
             else:
                 notifi = message_pop("Not supported","Current URL isn't supported, please switch page")
                 return None,recommendation_data,notifi
@@ -1179,6 +1212,7 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
             return rec_output_template,recommendation_data,dash.no_update
         
         except Exception as error:
+            print('ERROR during recommendation pipeline...')
             print(error)
             notifi = message_pop("Error","Something went wrong during the pipeline execution.")
             return None,{},notifi
