@@ -8,7 +8,8 @@ from pathlib import Path
 from flashrank import Ranker
 from rectools.models import load_model
 
-from project_package.modeling.recommendation_utils import get_embedding_model,load_vector_store
+from ..modeling.recommendation_utils import get_embedding_model,load_vector_store
+from ..modeling.ingredient_predictor import load_model as load_image_model
 from ..data_preprocessing.resource_access import (
     load_preference_data,load_user_review_data,load_recipe_data,construct_rec_train_dataset,
     load_recipe_url
@@ -27,7 +28,9 @@ _app_data = {
     "collab":None,
     "hybrid":None,
     "reranker":None,
-    "chunk_test": False
+    "chunk_test": False,
+    "image_model":None,
+    "idx_to_ingredient":None
 }
 
 root_directory = Path(os.getcwd())
@@ -80,6 +83,11 @@ reranker = Ranker(
 svd_model = load_model(root_directory / "models/recommendation_models/svd_recommendation_model.pkl")
 lightfm_model = load_model(root_directory / "models/recommendation_models/lightFM_recommendation_model.pkl")
 
+#Load igredient prediction model
+image_model,idx_to_ing = load_image_model(
+    root_directory / "models/ingredient_models/best_ingredient_model_cosine.pth",
+    os.environ.get("DEVICE","cpu")
+)
 
 # write to _app_data for easy access in UI app
 _app_data['embedding_model'] = embedding_model
@@ -97,3 +105,5 @@ _app_data['reranker'] = reranker
 if full_data!="full":
     _app_data["chunk_test"] = True
 
+_app_data['image_model'] = image_model
+_app_data['idx_to_ingredient'] = idx_to_ing
