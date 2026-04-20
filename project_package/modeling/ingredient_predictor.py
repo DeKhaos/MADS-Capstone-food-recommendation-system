@@ -43,7 +43,7 @@ def load_model(model_path, device='cpu'):
 
 def predict_from_base64(
     contents, model, idx_to_ing, 
-    device = 'cpu', 
+    device: str = 'cpu', 
     threshold: float = DEFAULT_THRESH, 
     topk: int = DEFAULT_TOPK
     ):
