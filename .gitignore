@@ -214,3 +214,4 @@ __marimo__/
 chroma_db/
 models/ingredient_models/*.pth
 models/recommendation_models/*.pkl
+nohup.out
