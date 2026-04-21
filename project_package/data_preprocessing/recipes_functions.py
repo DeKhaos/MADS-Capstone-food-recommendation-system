@@ -507,9 +507,7 @@ class LossyIngredientReducer:
         self.threshold = None
         self.match_mode = None
 
-    # --------------------------------------------------
     # internal helpers
-    # --------------------------------------------------
     @staticmethod
     def _is_valid_list(x):
         return isinstance(x, list)
@@ -522,9 +520,7 @@ class LossyIngredientReducer:
     def _safe_len_list(x):
         return len(x) if isinstance(x, list) else 0
 
-    # --------------------------------------------------
     # dataset summary
-    # --------------------------------------------------
     def dataset_level_summary(self, df, col=None):
         """
         Summarize a dataset column containing ingredient lists.
@@ -553,9 +549,7 @@ class LossyIngredientReducer:
     def dataset_level_summary_df(self, df, col=None):
         return pd.DataFrame([self.dataset_level_summary(df, col=col)])
 
-    # --------------------------------------------------
     # fit
-    # --------------------------------------------------
     def fit(self, df, threshold=5, match_mode="lt", col=None):
         if col is not None:
             self.col = col
@@ -588,9 +582,7 @@ class LossyIngredientReducer:
         self.target_set = set(self.docfreq.loc[mask, "ingredient"])
         return self
 
-    # --------------------------------------------------
     # transform one list
-    # --------------------------------------------------
     def transform_list(
         self,
         ingredients,
@@ -628,9 +620,7 @@ class LossyIngredientReducer:
         else:
             raise ValueError("mode must be 'remove' or 'replace'")
 
-    # --------------------------------------------------
     # transform dataframe
-    # --------------------------------------------------
     def transform(
         self,
         df,
@@ -662,9 +652,7 @@ class LossyIngredientReducer:
 
         return df_out
 
-    # --------------------------------------------------
     # convenience fit+transform
-    # --------------------------------------------------
     def fit_transform(
         self,
         df,
@@ -687,9 +675,7 @@ class LossyIngredientReducer:
             new_col=new_col
         )
 
-    # --------------------------------------------------
     # compare before / after
-    # --------------------------------------------------
     def compare_dataset_levels(self, df, new_col):
         before = self.dataset_level_summary(df, self.col)
         after = self.dataset_level_summary(df, new_col)
@@ -720,9 +706,7 @@ class LossyIngredientReducer:
 
         return pd.DataFrame(rows)
 
-    # --------------------------------------------------
     # threshold evaluation
-    # --------------------------------------------------
     def evaluate_thresholds(
         self,
         df,
@@ -783,9 +767,7 @@ class LossyIngredientReducer:
 
         return pd.DataFrame(results)
 
-    # --------------------------------------------------
     # target / kept ingredients
-    # --------------------------------------------------
     def get_target_ingredients_df(self):
         if self.docfreq is None:
             raise ValueError("You must call fit() first.")
