@@ -1171,7 +1171,7 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
                             dmc.Text('Choose plot type'),
                             dcc.Dropdown(
                                 ['sankey','bar'],
-                                value = 'sankey',
+                                value = 'bar',
                                 id=f"{search_id}_plot_type",
                                 className="w-75")
                         ],
@@ -1359,7 +1359,7 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
                 dmc.Divider(label="Cooking details",color="red",size="sm"),
                 dmc.Text("Instruction:",fw=700),
                 dmc.List(
-                    children = [dmc.ListItem(text) for text in data_df['instructions'].values[0] if text not in [',','']],
+                    children = [dmc.ListItem(text) for text in data_df['instructions'].values[0] if text not in [',','',', ']],
                     type="unordered",
                     withPadding=False
                 ),
