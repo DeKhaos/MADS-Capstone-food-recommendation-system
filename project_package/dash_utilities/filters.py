@@ -616,7 +616,7 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
                             dmc.NumberInput(
                                 label = "Number of candidate:",
                                 id = f"{search_id}_candidate",
-                                min=200, max=2000,value=200, className="w-75"
+                                min=200, max=500,value=200, className="w-75"
                             ),
                             dbc.Tooltip(
                                 "Number of candidate retrieved from Chroma vectorstore",
@@ -630,7 +630,7 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
                             dmc.NumberInput(
                                 label = "Number of recommendations:",
                                 id = f"{search_id}_n_recommendations",
-                                min=10, max=200,value=100, className="w-75"
+                                min=10, max=200,value=50, className="w-75"
                             ),
                             dbc.Tooltip(
                                 "Number of recipes generated from the recommendation model",
@@ -644,7 +644,7 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
                             dmc.NumberInput(
                                 label = "Number of similar users:",
                                 id = f"{search_id}_n_user",
-                                min=5, max=50,value=10, className="w-75"
+                                min=5, max=30,value=10, className="w-75"
                             ),
                             dbc.Tooltip(
                                 """Number of users similar to the profile to retrieve. 
@@ -663,7 +663,7 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
                             dmc.NumberInput(
                                 label = "Number of item to rank:",
                                 id = f"{search_id}_n_rank",
-                                min=10, max=200,value=50, className="w-75"
+                                min=10, max=200,value=20, className="w-75"
                             ),
                             dbc.Tooltip(
                                 "Number of recipes to rank from the recommendation model output",
@@ -1171,7 +1171,7 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
                             dmc.Text('Choose plot type'),
                             dcc.Dropdown(
                                 ['sankey','bar'],
-                                value = 'sankey',
+                                value = 'bar',
                                 id=f"{search_id}_plot_type",
                                 className="w-75")
                         ],
@@ -1359,7 +1359,7 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
                 dmc.Divider(label="Cooking details",color="red",size="sm"),
                 dmc.Text("Instruction:",fw=700),
                 dmc.List(
-                    children = [dmc.ListItem(text) for text in data_df['instructions'].values[0] if text not in [',','']],
+                    children = [dmc.ListItem(text) for text in data_df['instructions'].values[0] if text not in [',','',', ']],
                     type="unordered",
                     withPadding=False
                 ),
