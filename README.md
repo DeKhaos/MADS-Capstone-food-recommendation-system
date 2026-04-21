@@ -98,7 +98,7 @@ To retrain the the recommendation models on full dataset (saved in `data`), plea
 
 ### AWS Bedrock feature engineering
 
-The `scripts` directory contains all support scripts for preproducing the training process.
+The `scripts` directory contains all support scripts for preproducing the feature engineering step in AWS, database schema, and data migration to RDS.
 
 ## Project Organization
 
@@ -126,7 +126,7 @@ The `scripts` directory contains all support scripts for preproducing the traini
 │
 ├── reports            <- Store project report.
 │
-├── scripts            <- Store all script for feature engineering in AWS.
+├── scripts            <- Store all script for feature engineering in AWS and Database creation.
 │
 ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
 │                         generated with `pip freeze > requirements.txt`
@@ -139,7 +139,7 @@ The `scripts` directory contains all support scripts for preproducing the traini
 ## Contributors
 * Kha Nguyen (minhkha@umich.edu)
 * Naiwen Duan (nduan@umich.edu)
-* Susan Oseili (usanhat@umich.edu)
+* Susan Oseili (susanhat@umich.edu)
 * Jordan Huang (jordanhu@umich.edu)
 
 --------
