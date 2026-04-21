@@ -171,6 +171,16 @@ def create_login_modal(login_id: str):
                 color="primary",
                 size="sm",
             ),
+            dmc.Anchor(
+                DashIconify(
+                    icon="ion:logo-github", 
+                    width=30,
+                    color="black"
+                ),
+                href="https://github.com/DeKhaos/MADS-Capstone-food-recommendation-system",
+                target="_blank",
+                underline=False,
+            )
             #NOTE: uncomment to turn on login logic again
             # dbc.Button(
             #     "Log out", id=f"{login_id}_logout", outline=True, color="primary", size="sm"
