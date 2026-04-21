@@ -1,0 +1,4 @@
+model_label,model_id,avg_overall_score,avg_field_accuracy,avg_allowed_values_score,avg_latency_sec,avg_run_cost_usd,value_index,best_temperature,best_single_run_score,best_single_run_cost_usd,recipes_evaluated
+Anthropic Claude 3.5 Haiku,us.anthropic.claude-3-5-haiku-20241022-v1:0,85.8301,0.732,0.6413,1.5446,0.00089142,96285.0353,0.5,99.469,0.0005992,306
+Amazon Nova Micro,amazon.nova-micro-v1:0,83.236,0.6687,0.6487,0.4012,3.147e-05,2644690.957,0.5,99.8535,2.884e-05,306
+Meta Llama 3.2 11B Instruct,us.meta.llama3-2-11b-instruct-v1:0,81.0429,0.6433,0.692,0.9415,0.00011807,686369.0948,0.3,99.8115,0.00011152,306

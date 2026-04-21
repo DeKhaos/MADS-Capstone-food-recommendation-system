@@ -136,6 +136,7 @@ celerybeat.pid
 
 # Environments
 .env
+*.env
 .envrc
 .venv
 env/
@@ -208,3 +209,9 @@ __marimo__/
 
 # VSCode
 .vscode
+
+#Custom folders
+chroma_db/
+models/ingredient_models/*.pth
+models/recommendation_models/*.pkl
+nohup.out
