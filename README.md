@@ -4,6 +4,7 @@
 - [About this project](#about-this-project)
 - [Getting started](#getting-started)
     - [Environment Setup](#environment-setup)
+    - [Data access](#data-access)
     - [Credentials](#credentials)
     - [UI initialization](#ui-initialization)
 - [Support materials](#support-materials)
@@ -53,6 +54,17 @@ There is a few extra libraries that require CUDA but pip can't detect your machi
 
 The list of libraries that require CUDA: 
 - `torch` : for example my machine can use `pip install torch --index-url https://download.pytorch.org/whl/cu126`
+
+### Data access
+
+The data we used for this project is a combination of two datasets which are available for download from Kaggle.
+
+- [Food.com - Recipes and Reviews](https://www.kaggle.com/datasets/irkaal/foodcom-recipes-and-reviews)
+- [foodRecSys-V1](https://www.kaggle.com/datasets/elisaxxygao/foodrecsysv1)
+
+NOTE: 
+
+We have already cut the cleaned & processed dataset into chunks which allowed us to save the data in the repository. To combine the chunks into full datasets, you can use the utility function at in `project_package.data_collection.utility` or take a look at notebook No.6 for implementation.
 
 ### Credentials
 
