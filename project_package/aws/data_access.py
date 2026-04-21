@@ -89,7 +89,7 @@ def build_rds_connection() -> psycopg.Connection:
     missing = [k for k, v in db_config.items() if v is None and k != "port"]
     if missing:
         raise ValueError(
-            "Missing database settings in connect.env or environment variables: "
+            "Missing database settings in .env or environment variables: "
             + ", ".join(missing)
         )
 

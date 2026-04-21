@@ -25,7 +25,7 @@ S3_BUCKET = "food-tasters-recipe-674880355625-us-east-1-an"
 # Better default for IO bound Bedrock calls
 DEFAULT_MAX_WORKERS = int(os.getenv("PIPELINE_MAX_WORKERS", "8"))
 
-load_dotenv("database/connect.env")
+load_dotenv("../.env")
 
 VALID_CUISINES = {
     "asian",
@@ -242,7 +242,7 @@ def build_rds_connection() -> psycopg.Connection:
     missing = [k for k, v in db_config.items() if v is None and k != "port"]
     if missing:
         raise ValueError(
-            "Missing database settings in connect.env or environment variables: "
+            "Missing database settings in .env or environment variables: "
             + ", ".join(missing)
         )
 

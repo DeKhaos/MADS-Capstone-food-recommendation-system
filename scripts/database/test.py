@@ -3,7 +3,7 @@ import psycopg
 from dotenv import load_dotenv
 
 # Load env variables
-load_dotenv("connect.env")
+load_dotenv("../.env")
 
 DB_CONFIG = {
     "host": os.getenv("DB_HOST"),
