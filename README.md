@@ -68,7 +68,7 @@ We have already cut the cleaned & processed dataset into chunks which allowed us
 
 ### Credentials
 
-In the `.env` file (or `.env_template` if you haven't run `make setup`). There are some key variables that are required to host the application in AWS. If you don't play to deploy it in the cloud, you can just fill in the path to store the models then run the application locally.
+In the `.env` file (or `.env_template` if you haven't run `make setup`). There are some key variables that are required to host the application in AWS. If you don't plan to deploy it in the cloud, you can just fill in the path to store the models then run the application locally.
 
 ### UI initialization
 
