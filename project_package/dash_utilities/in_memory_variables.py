@@ -32,8 +32,11 @@ _app_data = {
     "image_model":None,
     "idx_to_ingredient":None
 }
+if os.environ.get('ROOT_DIRECTORY') is None:
+    root_directory = Path(os.getcwd())
+else:
+    root_directory = Path(os.environ.get('ROOT_DIRECTORY'))
 
-root_directory = Path(os.getcwd())
 full_data = os.environ.get('IN_MEMORY_DATA','full')
 
 # Chroma vectorstore
@@ -42,7 +45,10 @@ embedding_model = get_embedding_model(
     local_model_name="bge-small",
     device=os.environ.get("DEVICE","cpu")
 )
-chroma_path = root_directory / "data/processed/chroma_db"
+if full_data == "full":
+    chroma_path = root_directory / "data/processed/chroma_db"
+else:
+    chroma_path = root_directory / "data/processed/first_chunk_chroma_db"
 
 vectorstore = load_vector_store(
         collection_name="recipe_collection",
@@ -80,9 +86,12 @@ reranker = Ranker(
 
 # Recommendation models
 #NOTE: Load the models, for big model, we might need to load this from S3 or google drive
-svd_model = load_model(root_directory / "models/recommendation_models/svd_recommendation_model.pkl")
-lightfm_model = load_model(root_directory / "models/recommendation_models/lightFM_recommendation_model.pkl")
-
+if full_data=="full":
+    svd_model = load_model(root_directory / "models/recommendation_models/svd_recommendation_model.pkl")
+    lightfm_model = load_model(root_directory / "models/recommendation_models/lightFM_recommendation_model.pkl")
+else:  # get trained model on chunk data
+    svd_model = load_model(root_directory / "models/recommendation_models/first_chunk_models/svd_recommendation_model.pkl")
+    lightfm_model = load_model(root_directory / "models/recommendation_models/first_chunk_models/lightFM_recommendation_model.pkl")
 #Load igredient prediction model
 image_model,idx_to_ing = load_image_model(
     root_directory / "models/ingredient_models/best_ingredient_model_cosine.pth",

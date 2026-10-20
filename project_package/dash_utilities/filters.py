@@ -23,7 +23,10 @@ from .in_memory_variables import (
 from ..visualization import sankey_plot
 from ..aws.data_access import build_s3_client,fetch_s3_bytes
 
-root_directory = Path(os.getcwd())
+if os.environ.get('ROOT_DIRECTORY') is None:
+    root_directory = Path(os.getcwd())
+else:
+    root_directory = Path(os.environ.get('ROOT_DIRECTORY'))
 
 def shared_filters(trigger_id, store_id):
     """
@@ -1212,10 +1215,17 @@ def recommendation_filters(search_id,profile_store_id,filter_store_id):
             return rec_output_template,recommendation_data,dash.no_update
         
         except Exception as error:
-            print('ERROR during recommendation pipeline...')
-            print(error)
+            # print('ERROR during recommendation pipeline...')
+            # print(error)
             notifi = message_pop("Error","Something went wrong during the pipeline execution.")
-            return None,{},notifi
+            rec_output_template = dmc.Center(
+                style={"height": 200, "width": "100%"},
+                children=[
+                    dmc.Badge("INFO",color='blue',className='me-1'),
+                    dmc.Text("No recipe match search criteria found in database.", fw=600),
+                ],
+            )
+            return rec_output_template,{},notifi
 
     @callback(
         Output(f"{search_id}_recommendation_outputs","children",allow_duplicate=True),
