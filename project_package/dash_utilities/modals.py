@@ -10,7 +10,10 @@ import dash
 import numpy as np
 import pandas as pd
 
-root_directory = Path(os.getcwd())
+if os.environ.get('ROOT_DIRECTORY') is None:
+    root_directory = Path(os.getcwd())
+else:
+    root_directory = Path(os.environ.get('ROOT_DIRECTORY'))
 
 def create_login_modal(login_id: str):
     """
