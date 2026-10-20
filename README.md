@@ -72,7 +72,7 @@ In the `.env` file (or `.env_template` if you haven't run `make setup`). There a
 
 ### UI initialization
 
-We have a few pretrained models in `models/recommendation_models/first_chunk_models` which you can copy to `models/recommendation_models` to use.
+We have a few models in `models/recommendation_models/first_chunk` trained using the first chunk of csv files only. Models trained on fulldataset can be downloaded from Kaggle and copy to `models/recommendation_models/full_dataset` to use.
 
 For image classification models, due to storage limit in Github we can't create a toy version. Please follow the instruction in the relevant notebooks to train the models and copy it to `models/ingredient_models` to use the `image_search` page.
 

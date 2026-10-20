@@ -87,11 +87,12 @@ reranker = Ranker(
 # Recommendation models
 #NOTE: Load the models, for big model, we might need to load this from S3 or google drive
 if full_data=="full":
-    svd_model = load_model(root_directory / "models/recommendation_models/svd_recommendation_model.pkl")
-    lightfm_model = load_model(root_directory / "models/recommendation_models/lightFM_recommendation_model.pkl")
+    svd_model = load_model(root_directory / "models/recommendation_models/full_dataset/svd_recommendation_model.pkl")
+    lightfm_model = load_model(root_directory / "models/recommendation_models/full_dataset/lightFM_recommendation_model.pkl")
 else:  # get trained model on chunk data
-    svd_model = load_model(root_directory / "models/recommendation_models/first_chunk_models/svd_recommendation_model.pkl")
-    lightfm_model = load_model(root_directory / "models/recommendation_models/first_chunk_models/lightFM_recommendation_model.pkl")
+    svd_model = load_model(root_directory / "models/recommendation_models/first_chunk/svd_recommendation_model.pkl")
+    lightfm_model = load_model(root_directory / "models/recommendation_models/first_chunk/lightFM_recommendation_model.pkl")
+
 #Load igredient prediction model
 image_model,idx_to_ing = load_image_model(
     root_directory / "models/ingredient_models/best_ingredient_model_cosine.pth",

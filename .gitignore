@@ -211,10 +211,10 @@ __marimo__/
 .vscode
 
 #Custom folders
-chroma_db/*
+chroma_db/
 !chroma_db/.gitkeep
-first_chunk_chroma_db/*
+first_chunk_chroma_db/
 !first_chunk_chroma_db/.gitkeep
 models/ingredient_models/*.pth
-models/recommendation_models/*.pkl
+models/recommendation_models/full_dataset/*.pkl
 nohup.out
