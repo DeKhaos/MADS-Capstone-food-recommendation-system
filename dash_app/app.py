@@ -13,6 +13,10 @@ from dash_bootstrap_templates import ThemeChangerAIO, template_from_url
 import dash_mantine_components as dmc
 import dash_bootstrap_components as dbc
 from dash_iconify import DashIconify
+# need to add these packages unfront to avoid dll path error when import as dependencies for some packages
+import torch
+from sentence_transformers import SentenceTransformer
+
 from project_package.dash_utilities import modals,filters
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
