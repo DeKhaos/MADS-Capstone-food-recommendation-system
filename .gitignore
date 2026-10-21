@@ -218,3 +218,5 @@ first_chunk_chroma_db/
 models/ingredient_models/*.pth
 models/recommendation_models/full_dataset/*.pkl
 nohup.out
+data/processed/Recipes/*.csv
+data/processed/Reviews/*.csv
